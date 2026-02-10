@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;600&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #FFFFFF;
+  --text: #000000;
+  --dot-color: rgba(0, 0, 0, 0.05);
+  --accent: #A855F7;
+}
+
+.dark {
+  --bg: #000000;
+  --text: #FFFFFF;
+  --dot-color: rgba(255, 255, 255, 0.08);
+  --accent: #A855F7;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+    @apply font-sans overflow-x-hidden transition-colors duration-500;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/5 dark:bg-black/20 backdrop-blur-xl border border-black/5 dark:border-white/10 shadow-xl;
+  }
+
+  .glass-input {
+    @apply bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 backdrop-blur-md text-black dark:text-white focus:border-nex-purple/50 outline-none transition-all;
+  }
+
+  .neon-text {
+    text-shadow: 0 0 8px rgba(168, 85, 247, 0.5), 0 0 16px rgba(168, 85, 247, 0.3);
+  }
+
+  .neon-border {
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3), 0 0 20px rgba(168, 85, 247, 0.1);
+  }
+
+  .matrix-bg {
+    @apply fixed inset-0 -z-10 pointer-events-none opacity-100;
+    background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}

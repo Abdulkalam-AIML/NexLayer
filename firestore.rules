@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isCEO() {
+      return isAuthenticated() && getUserData().role == 'CEO';
+    }
+    
+    function isMember() {
+      return isAuthenticated() && getUserData().role == 'Member';
+    }
+
+    // --- Rules ---
+
+    // Users collection: CEO sees all, others see themselves
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isCEO());
+      allow write: if isCEO();
+    }
+
+    // Client Requests: Anyone can submit, only CEO can manage
+    match /clientRequests/{requestId} {
+      allow create: if true; 
+      allow read, write: if isCEO();
+    }
+
+    // Projects: CEO has full access, Members see assigned, Clients see own
+    match /projects/{projectId} {
+      allow read: if isCEO() || (isMember() && request.auth.token.email in resource.data.assignedMembers);
+      allow write: if isCEO();
+    }
+
+    // Reports: CEO sees all, Members create/read for assigned projects
+    match /reports/{reportId} {
+      allow read: if isCEO() || (isMember() && request.auth.uid == resource.data.memberId);
+      allow create: if isMember();
+    }
+  }
+}
