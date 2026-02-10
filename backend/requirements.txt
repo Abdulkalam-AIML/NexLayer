@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 firebase-admin
 python-multipart
 python-dotenv
