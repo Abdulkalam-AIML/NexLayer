@@ -93,9 +93,9 @@ async def create_client_request(req: UserRequest):
             "deadline": req.deadline,
             "description": req.description,
             "status": "pending",
-            "timestamp": firestore.SERVER_TIMESTAMP
+            "timestamp": datetime.now()
         }
-        _, doc_ref = db.collection('clientRequests').add(new_request)
+        _, doc_ref = db.collection('requests').add(new_request)
         return {"id": doc_ref.id, "status": "success"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
