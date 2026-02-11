@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Code, Cpu, Globe, Server, Bug, FileText, Layers } from 'lucide-react';
-import ServiceModal from '../components/ServiceModal';
 
 const services = [
     { icon: <Code className="w-8 h-8 text-nex-cyber" />, title: 'Mini Projects', desc: 'Java, Python, Web based mini projects for semesters.' },
@@ -14,9 +13,8 @@ const services = [
     { icon: <FileText className="w-8 h-8 text-nex-cyber" />, title: 'Documentation', desc: 'Project Reports, PPTs, and setup guides.' },
 ];
 
-const Services = () => {
+const Services = ({ onSelectService }) => {
     const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.1 });
-    const [selectedService, setSelectedService] = useState(null);
 
     return (
         <section id="services" className="py-20 bg-transparent relative overflow-hidden transition-colors duration-300">
@@ -42,7 +40,7 @@ const Services = () => {
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             whileHover={{ scale: 1.05, borderColor: '#A855F7', boxShadow: '0 0 15px rgba(168, 85, 247, 0.1)' }}
                             className="glass-card p-6 rounded-xl cursor-pointer group transition-all"
-                            onClick={() => setSelectedService(service.title)}
+                            onClick={() => onSelectService(service.title)}
                         >
                             <div className="mb-4 bg-black/5 dark:bg-white/5 w-16 h-16 rounded-lg flex items-center justify-center group-hover:bg-nex-purple/10 transition-colors">
                                 {service.icon}
@@ -53,12 +51,6 @@ const Services = () => {
                     ))}
                 </div>
             </div>
-
-            <ServiceModal
-                isOpen={!!selectedService}
-                onClose={() => setSelectedService(null)}
-                service={selectedService}
-            />
         </section>
     );
 };

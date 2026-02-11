@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, Loader2 } from 'lucide-react';
-import { db } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { callApi } from '../lib/api';
 
 const ServiceModal = ({ isOpen, onClose, service }) => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
+        phone: '',
         isStudent: true,
         college: '',
         topic: service || '',
@@ -21,18 +21,19 @@ const ServiceModal = ({ isOpen, onClose, service }) => {
         setLoading(true);
 
         try {
-            const docRef = await addDoc(collection(db, "requests"), {
-                ...formData,
-                topic: formData.topic || service,
-                timestamp: serverTimestamp(),
-                status: 'pending'
+            await callApi('/api/requests', {
+                method: 'POST',
+                data: {
+                    ...formData,
+                    topic: formData.topic || service,
+                },
+                noAuth: true // Allow public submission
             });
 
-            console.log('Document written with ID: ', docRef.id);
             alert("Request Sent! We will contact you shortly.");
             onClose();
         } catch (error) {
-            console.error("Error adding document: ", error);
+            console.error("Error sending request: ", error);
             alert("Error sending request. Please try again.");
         } finally {
             setLoading(false);
@@ -104,6 +105,18 @@ const ServiceModal = ({ isOpen, onClose, service }) => {
                                             type="text"
                                             name="name"
                                             required
+                                            className="w-full glass-input rounded h-10 px-3 transition-colors"
+                                            onChange={handleChange}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-500 dark:text-gray-400 mb-1">Mobile Number</label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            required
+                                            placeholder="10-digit mobile number"
+                                            pattern="[0-9]{10}"
                                             className="w-full glass-input rounded h-10 px-3 transition-colors"
                                             onChange={handleChange}
                                         />

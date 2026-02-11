@@ -2,16 +2,22 @@ import React, { useState } from 'react';
 import { callApi } from '../lib/api';
 import { Mail, Instagram, Phone, Send, CheckCircle2 } from 'lucide-react';
 
-const Contact = () => {
+const Contact = ({ prefilledService }) => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
-        projectType: 'Website Development',
+        projectType: '',
         deadline: '',
         message: ''
     });
     const [status, setStatus] = useState('idle'); // idle, sending, success, error
+
+    React.useEffect(() => {
+        if (prefilledService) {
+            setFormData(prev => ({ ...prev, projectType: prefilledService }));
+        }
+    }, [prefilledService]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -150,18 +156,14 @@ const Contact = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Project Category</label>
-                                        <select
+                                        <input
+                                            type="text"
                                             name="projectType"
                                             value={formData.projectType}
                                             onChange={handleChange}
-                                            className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-3 text-black dark:text-white focus:border-nex-purple focus:ring-1 focus:ring-nex-purple focus:outline-none transition-all appearance-none"
-                                        >
-                                            <option>Website Development</option>
-                                            <option>Mini Project Support</option>
-                                            <option>AI / ML Integration</option>
-                                            <option>UI/UX Design</option>
-                                            <option>Code Debugging</option>
-                                        </select>
+                                            placeholder="e.g. Website Development, AI Project"
+                                            className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-3 text-black dark:text-white focus:border-nex-purple focus:ring-1 focus:ring-nex-purple focus:outline-none transition-all"
+                                        />
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Expected Deadline</label>

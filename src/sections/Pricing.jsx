@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Check, Info, Server, Code, Box } from 'lucide-react';
-import ServiceModal from '../components/ServiceModal';
 
 const webPackages = [
     {
@@ -41,8 +40,7 @@ const prototypes = [
     { name: "Prototype + Deployment", price: "₹1,500 + cost" }
 ];
 
-const Pricing = () => {
-    const [selectedPackage, setSelectedPackage] = useState(null);
+const Pricing = ({ onSelectService }) => {
 
     return (
         <section id="pricing" className="py-20 bg-transparent relative overflow-hidden transition-colors duration-300">
@@ -96,7 +94,7 @@ const Pricing = () => {
                             </ul>
 
                             <button
-                                onClick={() => setSelectedPackage(`Web Dev - ${pkg.name}`)}
+                                onClick={() => onSelectService(`Web Dev - ${pkg.name}`)}
                                 className={`w-full py-3 rounded font-bold transition-all ${pkg.popular ? 'bg-nex-purple text-black hover:bg-nex-purple/90 hover:shadow-[0_0_20px_#A855F7]' : 'bg-black/10 dark:bg-white/10 text-black dark:text-white hover:bg-black/20 dark:hover:bg-white/20'}`}
                             >
                                 Select Plan
@@ -115,7 +113,7 @@ const Pricing = () => {
                         </div>
                         <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">Get your own .com, .in, .org domain name.</p>
                         <p className="text-xl font-bold text-black dark:text-white mb-4">Extra ₹2,000 – ₹4,000</p>
-                        <button onClick={() => setSelectedPackage("Custom Domain Add-on")} className="text-nex-purple text-sm hover:underline">Request Add-on &rarr;</button>
+                        <button onClick={() => onSelectService("Custom Domain Add-on")} className="text-nex-purple text-sm hover:underline">Request Add-on &rarr;</button>
                     </div>
 
                     {/* Mini Projects */}
@@ -132,7 +130,7 @@ const Pricing = () => {
                                 </li>
                             ))}
                         </ul>
-                        <button onClick={() => setSelectedPackage("Mini Project Support")} className="text-nex-purple text-sm hover:underline">Get Support &rarr;</button>
+                        <button onClick={() => onSelectService("Mini Project Support")} className="text-nex-purple text-sm hover:underline">Get Support &rarr;</button>
                     </div>
 
                     {/* Prototyping */}
@@ -149,7 +147,7 @@ const Pricing = () => {
                                 </li>
                             ))}
                         </ul>
-                        <button onClick={() => setSelectedPackage("Prototype Development")} className="text-nex-purple text-sm hover:underline">Start Prototype &rarr;</button>
+                        <button onClick={() => onSelectService("Prototype Development")} className="text-nex-purple text-sm hover:underline">Start Prototype &rarr;</button>
                     </div>
                 </div>
 
@@ -177,12 +175,6 @@ const Pricing = () => {
                 </div>
 
             </div>
-
-            <ServiceModal
-                isOpen={!!selectedPackage}
-                onClose={() => setSelectedPackage(null)}
-                service={selectedPackage}
-            />
         </section>
     );
 };
