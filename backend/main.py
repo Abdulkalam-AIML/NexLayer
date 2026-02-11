@@ -221,6 +221,27 @@ async def get_reports_per_project(project_id: str, user: dict = Depends(get_curr
     docs = db.collection('reports').where('projectId', '==', project_id).order_by('timestamp', direction=firestore.Query.DESCENDING).stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 
+@app.get("/api/users")
+async def get_all_users(user: dict = Depends(get_current_user)):
+    user_doc = db.collection('users').document(user['uid']).get()
+    if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
+        raise HTTPException(status_code=403, detail="CEO access required")
+    
+    docs = db.collection('users').stream()
+    users = []
+    for doc in docs:
+        data = doc.to_dict()
+        # Filter out sensitive info if necessary, but for CEO view, emails/phones are fine.
+        users.append({
+            "id": doc.id,
+            "name": data.get("name", "Unknown"),
+            "email": data.get("email", ""),
+            "role": data.get("role", "Member"),
+            "phone": data.get("phone", ""),
+            "status": "active" # Placeholder or derived from last activity
+        })
+    return users
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
