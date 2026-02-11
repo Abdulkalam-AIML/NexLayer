@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../lib/firebase';
+import { callApi } from '../../lib/api';
 import { collection, getDocs } from 'firebase/firestore';
 import { Users, Mail, Phone, Shield } from 'lucide-react';
 
@@ -8,8 +9,12 @@ const Team = () => {
 
     useEffect(() => {
         const fetchMembers = async () => {
-            const querySnapshot = await getDocs(collection(db, "users"));
-            setMembers(querySnapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+            try {
+                const data = await callApi('/api/users');
+                setMembers(data);
+            } catch (error) {
+                console.error("Error fetching members:", error);
+            }
         };
         fetchMembers();
     }, []);
