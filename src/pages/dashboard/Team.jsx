@@ -30,6 +30,16 @@ const Team = () => {
         }
     }, [role]);
 
+    // Show loading while determining role
+    if (role === null) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-nex-purple mb-4"></div>
+                <p className="text-gray-500">Verifying permissions...</p>
+            </div>
+        );
+    }
+
     if (role !== 'CEO') {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
