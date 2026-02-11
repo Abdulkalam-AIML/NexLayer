@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { callApi } from '../../lib/api';
-import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, addDoc, serverTimestamp, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { doc, deleteDoc } from 'firebase/firestore';
 import { Plus, Search, Calendar, User, Trash2, Edit2, X } from 'lucide-react';
 
 const TEAM_MEMBERS = [
@@ -20,9 +19,10 @@ const Projects = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
+    const [editingProject, setEditingProject] = useState(null);
 
-    // New Project Form State
-    const [newProject, setNewProject] = useState({
+    // New/Edit Project Form State
+    const [formData, setFormData] = useState({
         title: '',
         client: '',
         description: '',
@@ -49,34 +49,68 @@ const Projects = () => {
         }
     }, [user, role]);
 
-    const handleCreateProject = async (e) => {
+    const handleOpenModal = (project = null) => {
+        if (project) {
+            setEditingProject(project);
+            setFormData({
+                title: project.projectTitle,
+                client: project.clientName,
+                description: project.description,
+                deadline: project.deadline,
+                progress: project.progress || 0,
+                assignedMembers: project.assignedMembers || [],
+                status: project.status || 'Active'
+            });
+        } else {
+            setEditingProject(null);
+            setFormData({ title: '', client: '', description: '', deadline: '', progress: 0, assignedMembers: [], status: 'Active' });
+        }
+        setIsModalOpen(true);
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // Using existing client-side firestore for quick creation, 
-            // but we could also use the FastAPI endpoint if preferred.
-            // Requirement says "Only CEO can create projects"
-            await addDoc(collection(db, "projects"), {
-                projectTitle: newProject.title,
-                clientName: newProject.client,
-                description: newProject.description,
-                deadline: newProject.deadline,
-                progress: newProject.progress || 0,
-                assignedMembers: newProject.assignedMembers,
-                status: newProject.status,
-                createdAt: serverTimestamp()
-            });
+            if (editingProject) {
+                // Update existing project
+                const projectRef = doc(db, "projects", editingProject.id);
+                await updateDoc(projectRef, {
+                    projectTitle: formData.title,
+                    clientName: formData.client,
+                    description: formData.description,
+                    deadline: formData.deadline,
+                    progress: formData.progress || 0,
+                    assignedMembers: formData.assignedMembers,
+                    status: formData.status
+                });
+            } else {
+                // Create new project
+                await addDoc(collection(db, "projects"), {
+                    projectTitle: formData.title,
+                    clientName: formData.client,
+                    description: formData.description,
+                    deadline: formData.deadline,
+                    progress: formData.progress || 0,
+                    assignedMembers: formData.assignedMembers,
+                    status: formData.status,
+                    createdAt: serverTimestamp()
+                });
+            }
 
             setIsModalOpen(false);
-            setNewProject({ title: '', client: '', description: '', deadline: '', progress: 0, assignedMembers: [], status: 'Active' });
+            setEditingProject(null);
+            setFormData({ title: '', client: '', description: '', deadline: '', progress: 0, assignedMembers: [], status: 'Active' });
             fetchProjects();
         } catch (error) {
-            console.error("Error adding project: ", error);
+            console.error("Error saving project: ", error);
+            alert("Error saving project. Please try again.");
         }
     };
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this project?")) {
             await deleteDoc(doc(db, "projects", id));
+            fetchProjects();
         }
     };
 
@@ -95,7 +129,7 @@ const Projects = () => {
 
                 {role === 'CEO' && (
                     <button
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => handleOpenModal()}
                         className="px-6 py-2 bg-nex-purple text-black font-bold rounded flex items-center gap-2 hover:bg-nex-purple/90 transition-colors"
                     >
                         <Plus size={20} /> New Project
@@ -126,9 +160,14 @@ const Projects = () => {
                                 {project.status}
                             </span>
                             {role === 'CEO' && (
-                                <button onClick={() => handleDelete(project.id)} className="text-gray-500 hover:text-red-500 transition-colors">
-                                    <Trash2 size={16} />
-                                </button>
+                                <div className="flex gap-2">
+                                    <button onClick={() => handleOpenModal(project)} className="text-gray-500 hover:text-nex-purple transition-colors">
+                                        <Edit2 size={16} />
+                                    </button>
+                                    <button onClick={() => handleDelete(project.id)} className="text-gray-500 hover:text-red-500 transition-colors">
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -163,42 +202,54 @@ const Projects = () => {
                 )}
             </div>
 
-            {/* Create Modal */}
+            {/* Create/Edit Modal */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                     <div className="bg-nex-dark w-full max-w-2xl rounded-2xl border border-white/10 shadow-2xl overflow-y-auto max-h-[90vh]">
                         <div className="p-6 border-b border-white/10 flex justify-between items-center">
-                            <h2 className="text-2xl font-bold text-black">Create New Project</h2>
+                            <h2 className="text-2xl font-bold text-black">{editingProject ? 'Edit Project' : 'Create New Project'}</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-600 hover:text-black">
                                 <X size={24} />
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateProject} className="p-6 space-y-4">
+                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">Project Title</label>
-                                    <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newProject.title} onChange={e => setNewProject({ ...newProject, title: e.target.value })} />
+                                    <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">Client Name</label>
-                                    <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newProject.client} onChange={e => setNewProject({ ...newProject, client: e.target.value })} />
+                                    <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={formData.client} onChange={e => setFormData({ ...formData, client: e.target.value })} />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm text-gray-600 mb-1">Description</label>
-                                <textarea className="w-full bg-black/40 border border-white/10 rounded p-2 text-black h-24" value={newProject.description} onChange={e => setNewProject({ ...newProject, description: e.target.value })}></textarea>
+                                <textarea className="w-full bg-black/40 border border-white/10 rounded p-2 text-black h-24" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">Deadline</label>
-                                    <input required type="date" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newProject.deadline} onChange={e => setNewProject({ ...newProject, deadline: e.target.value })} />
+                                    <input required type="date" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className="block text-sm text-gray-600 mb-1">Progress (%)</label>
-                                    <input type="number" min="0" max="100" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newProject.progress || 0} onChange={e => setNewProject({ ...newProject, progress: parseInt(e.target.value) })} />
+                                    <input type="number" min="0" max="100" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={formData.progress || 0} onChange={e => setFormData({ ...formData, progress: parseInt(e.target.value) })} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-1">Status</label>
+                                    <select
+                                        className="w-full bg-black/40 border border-white/10 rounded p-2 text-black appearance-none"
+                                        value={formData.status}
+                                        onChange={e => setFormData({ ...formData, status: e.target.value })}
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="On Hold">On Hold</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -210,12 +261,12 @@ const Projects = () => {
                                             <input
                                                 type="checkbox"
                                                 className="w-4 h-4 rounded border-white/10 bg-black/40 text-nex-purple focus:ring-nex-purple"
-                                                checked={newProject.assignedMembers.includes(email)}
+                                                checked={formData.assignedMembers.includes(email)}
                                                 onChange={(e) => {
                                                     const updated = e.target.checked
-                                                        ? [...newProject.assignedMembers, email]
-                                                        : newProject.assignedMembers.filter(m => m !== email);
-                                                    setNewProject({ ...newProject, assignedMembers: updated });
+                                                        ? [...formData.assignedMembers, email]
+                                                        : formData.assignedMembers.filter(m => m !== email);
+                                                    setFormData({ ...formData, assignedMembers: updated });
                                                 }}
                                             />
                                             <span className="text-sm text-gray-400 group-hover:text-white transition-colors capitalize">
@@ -228,7 +279,9 @@ const Projects = () => {
 
                             <div className="pt-4 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 text-gray-700 hover:text-black transition-colors">Cancel</button>
-                                <button type="submit" className="px-6 py-2 bg-nex-purple text-black font-bold rounded hover:bg-nex-purple/90 hover:shadow-[0_0_15px_#A855F7] transition-all">Create Project</button>
+                                <button type="submit" className="px-6 py-2 bg-nex-purple text-black font-bold rounded hover:bg-nex-purple/90 hover:shadow-[0_0_15px_#A855F7] transition-all">
+                                    {editingProject ? 'Update Project' : 'Create Project'}
+                                </button>
                             </div>
                         </form>
                     </div>

@@ -83,7 +83,7 @@ const Overview = () => {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             <header>
-                <h1 className="text-3xl font-bold dark:text-white capitalize">Welcome back, {user?.name?.split(' ')[0] || 'User'}!</h1>
+                <h1 className="text-3xl font-bold dark:text-white capitalize">Welcome Back, <span className="text-nex-purple">{user?.displayName || user?.name || role || 'User'}</span>!</h1>
                 <p className="dark:text-gray-400 text-gray-500">Operations System | Role: <span className="text-nex-purple font-bold">{role}</span></p>
             </header>
 
