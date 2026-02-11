@@ -23,8 +23,7 @@ service cloud.firestore {
 
     // Users collection: CEO sees all, others see themselves
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || isCEO());
-      allow write: if isCEO();
+      allow read, write: if isAuthenticated();
     }
 
     // Client Requests: Anyone can submit, only CEO can manage

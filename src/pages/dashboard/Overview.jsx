@@ -73,11 +73,19 @@ const Overview = () => {
         }
     };
 
-    const stats = [
+    const stats = role === 'CEO' ? [
         { name: 'Active Projects', value: ongoingProjects.length.toString(), icon: <FolderKanban className="text-blue-500" />, trend: 'Live' },
         { name: 'Pending Requests', value: pendingRequests.length.toString(), icon: <Mail className="text-nex-purple" />, trend: 'Action Required' },
         { name: 'Reports Today', value: '0', icon: <CheckSquare className="text-green-500" />, trend: '+0' },
         { name: 'Avg. Progress', value: '0%', icon: <TrendingUp className="text-nex-cyber" />, trend: 'Steady' },
+    ] : role === 'Client' ? [
+        { name: 'My Total Projects', value: ongoingProjects.length.toString(), icon: <FolderKanban className="text-blue-500" />, trend: 'Tracking' },
+        { name: 'Active Status', value: ongoingProjects.filter(p => p.status !== 'completed').length > 0 ? 'Project Live' : 'No Activity', icon: <Clock className="text-nex-purple" />, trend: 'Real-time' },
+        { name: 'Unread Messages', value: '0', icon: <Mail className="text-nex-cyber" />, trend: 'New' },
+    ] : [ // Team Member
+        { name: 'Assigned Tasks', value: ongoingProjects.length.toString(), icon: <CheckSquare className="text-green-500" />, trend: 'Action' },
+        { name: 'Avg. My Progress', value: '0%', icon: <TrendingUp className="text-nex-cyber" />, trend: 'Performance' },
+        { name: 'Next Deadline', value: 'Upcoming', icon: <Clock className="text-nex-purple" />, trend: 'Focus' },
     ];
 
     return (
@@ -139,6 +147,21 @@ const Overview = () => {
                                 </div>
                             )}
                         </div>
+                    </div>
+                )}
+
+                {/* Client / Member Empty Views */}
+                {role !== 'CEO' && ongoingProjects.length === 0 && (
+                    <div className="lg:col-span-2 glass-card p-12 rounded-2xl border border-white/10 text-center space-y-4">
+                        <div className="w-20 h-20 bg-nex-purple/10 rounded-full flex items-center justify-center mx-auto">
+                            <Briefcase className="w-10 h-10 text-nex-purple" />
+                        </div>
+                        <h3 className="text-2xl font-bold dark:text-white">No active projects</h3>
+                        <p className="text-gray-500 max-w-sm mx-auto">
+                            {role === 'Client'
+                                ? "You haven't requested any projects yet. Click 'Request Work' in the sidebar to get started!"
+                                : "You haven't been assigned to any projects yet. Check back later once the CEO assigns your next task."}
+                        </p>
                     </div>
                 )}
 

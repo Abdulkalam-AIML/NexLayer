@@ -9,6 +9,7 @@ const Contact = ({ prefilledService }) => {
         phone: '',
         projectType: '',
         deadline: '',
+        budget: '',
         message: ''
     });
     const [status, setStatus] = useState('idle'); // idle, sending, success, error
@@ -27,12 +28,13 @@ const Contact = ({ prefilledService }) => {
             // 1. Save to database via FastAPI
             await callApi('/api/requests', {
                 method: 'POST',
-                noAuth: true, // Allow guests to submit requests
+                noAuth: false, // Now requires auth to link clientId
                 data: {
                     name: formData.name,
                     phone: formData.phone,
                     topic: formData.projectType,
                     deadline: formData.deadline,
+                    budget: formData.budget,
                     description: formData.message
                 }
             });
@@ -172,6 +174,17 @@ const Contact = ({ prefilledService }) => {
                                             name="deadline"
                                             required
                                             value={formData.deadline}
+                                            onChange={handleChange}
+                                            className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-3 text-black dark:text-white focus:border-nex-purple focus:ring-1 focus:ring-nex-purple focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Estimated Budget</label>
+                                        <input
+                                            type="text"
+                                            name="budget"
+                                            placeholder="e.g. $500, Custom"
+                                            value={formData.budget}
                                             onChange={handleChange}
                                             className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-lg px-4 py-3 text-black dark:text-white focus:border-nex-purple focus:ring-1 focus:ring-nex-purple focus:outline-none transition-all"
                                         />

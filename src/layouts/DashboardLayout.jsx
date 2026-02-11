@@ -7,6 +7,7 @@ import Sidebar from '../components/Sidebar';
 import Logo from '../components/Logo';
 import { Helmet } from 'react-helmet-async';
 import { Menu } from 'lucide-react';
+import { MOCK_USERS } from '../config/authConfig';
 
 const DashboardLayout = () => {
     const [user, setUser] = useState(null);
@@ -22,16 +23,24 @@ const DashboardLayout = () => {
             const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
                 if (currentUser) {
                     setUser(currentUser);
+                    console.log("Current User UID:", currentUser.uid);
                     try {
                         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
                         if (userDoc.exists()) {
-                            setRole(userDoc.data().role);
+                            const userData = userDoc.data();
+                            console.log("User Role Found in Firestore:", userData.role);
+                            setRole(userData.role);
                         } else {
-                            setRole("Member");
+                            console.warn("No user document found for UID:", currentUser.uid);
+                            // Fallback to MOCK_USERS if doc missing
+                            const mockUser = MOCK_USERS.find(u => u.email === currentUser.email);
+                            setRole(mockUser ? mockUser.role : "Member");
                         }
                     } catch (error) {
-                        console.error("Error fetching role:", error);
-                        setRole("Member");
+                        console.error("Error fetching role for UID", currentUser.uid, ":", error);
+                        // Fallback to MOCK_USERS if permission denied or other error
+                        const mockUser = MOCK_USERS.find(u => u.email === currentUser.email);
+                        setRole(mockUser ? mockUser.role : "Member");
                     }
                 } else {
                     navigate('/login');

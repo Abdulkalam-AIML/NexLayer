@@ -23,21 +23,28 @@ const Sidebar = ({ role }) => {
         navigate('/login');
     };
 
-    let navItems = [
-        { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
-        { name: 'Projects', path: '/dashboard/projects', icon: <FolderKanban size={20} /> },
-        { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
-        { name: 'Team', path: '/dashboard/team', icon: <Users size={20} /> },
-    ];
+    let navItems = [];
 
     if (role === 'CEO') {
-        navItems.push({ name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} /> });
-    }
-
-    if (role === 'Client') {
+        navItems = [
+            { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
+            { name: 'Projects', path: '/dashboard/projects', icon: <FolderKanban size={20} /> },
+            { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
+            { name: 'Team', path: '/dashboard/team', icon: <Users size={20} /> },
+            { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} /> },
+        ];
+    } else if (role === 'Client') {
         navItems = [
             { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
             { name: 'My Projects', path: '/dashboard/projects', icon: <FolderKanban size={20} /> },
+            { name: 'Request Project', path: '/dashboard/request', icon: <Plus size={20} /> },
+        ];
+    } else {
+        // Team Member
+        navItems = [
+            { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
+            { name: 'My Tasks', path: '/dashboard/projects', icon: <CheckSquare size={20} /> },
+            { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
         ];
     }
 
@@ -53,19 +60,29 @@ const Sidebar = ({ role }) => {
 
             <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 {navItems.map((item) => (
-                    <NavLink
-                        key={item.name}
-                        to={item.path}
-                        end={item.end}
-                        className={({ isActive }) =>
-                            `w-full flex items-center gap-3 px-4 py-3 rounded transition-all ${isActive
-                                ? 'bg-nex-purple/10 text-nex-purple border border-nex-purple/20'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
-                            }`
-                        }
-                    >
-                        {item.icon} {item.name}
-                    </NavLink>
+                    item.external ? (
+                        <a
+                            key={item.name}
+                            href={item.path}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded transition-all text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5"
+                        >
+                            {item.icon} {item.name}
+                        </a>
+                    ) : (
+                        <NavLink
+                            key={item.name}
+                            to={item.path}
+                            end={item.end}
+                            className={({ isActive }) =>
+                                `w-full flex items-center gap-3 px-4 py-3 rounded transition-all ${isActive
+                                    ? 'bg-nex-purple/10 text-nex-purple border border-nex-purple/20'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5'
+                                }`
+                            }
+                        >
+                            {item.icon} {item.name}
+                        </NavLink>
+                    )
                 ))}
             </nav>
 

@@ -12,6 +12,7 @@ import Reports from './pages/dashboard/Reports';
 import Team from './pages/dashboard/Team';
 import Files from './pages/dashboard/Files';
 import Settings from './pages/dashboard/Settings';
+import Request from './pages/dashboard/Request';
 
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -39,6 +40,7 @@ function App() {
               <Route path="team" element={<Team />} />
               <Route path="files" element={<Files />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="request" element={<Request />} />
             </Route>
           </Routes>
         </Router>

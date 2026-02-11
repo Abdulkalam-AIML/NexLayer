@@ -43,13 +43,8 @@ security = HTTPBearer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://nex-layer.vercel.app",
-        "https://nexlayer-f787f.web.app",
-        "http://localhost:5173",
-        "http://localhost:3000"
-    ],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -72,15 +67,22 @@ class UserRequest(BaseModel):
     topic: str
     deadline: str
     description: str
+    budget: Optional[str] = None
 
 class ProjectAssignment(BaseModel):
     member_emails: List[str]
+    priority: Optional[str] = "Medium"
+    deadline: Optional[str] = None
 
 class DailyReport(BaseModel):
     project_id: str
     work_done: str
     issues: Optional[str] = None
     next_task: str
+
+class Message(BaseModel):
+    project_id: str
+    content: str
 
 # --- Endpoints ---
 
@@ -89,16 +91,18 @@ async def root():
     return {"message": "NexLayer Operations API is online"}
 
 @app.post("/api/requests")
-async def create_client_request(req: UserRequest):
+async def create_client_request(req: UserRequest, user: dict = Depends(get_current_user)):
     try:
         new_request = {
+            "clientId": user['uid'], # Link to the authenticated client
             "name": req.name,
             "phone": req.phone,
             "topic": req.topic,
             "deadline": req.deadline,
             "description": req.description,
+            "budget": req.budget,
             "status": "pending",
-            "timestamp": datetime.now()
+            "timestamp": firestore.SERVER_TIMESTAMP
         }
         _, doc_ref = db.collection('requests').add(new_request)
         return {"id": doc_ref.id, "status": "success"}
@@ -129,15 +133,18 @@ async def approve_request(request_id: str, user: dict = Depends(get_current_user
     data = req_doc.to_dict()
     # Create project
     project_data = {
+        "clientId": data.get('clientId'),
         "clientName": data['name'],
         "clientPhone": data['phone'],
         "topic": data['topic'],
-        "projectTitle": data['topic'], # Map topic to projectTitle for consistency
+        "projectTitle": data['topic'],
         "deadline": data['deadline'],
-        "status": "active",
+        "budget": data.get('budget'),
+        "status": "approved", # Initial status after approval
         "description": data['description'],
         "progress": 0,
         "assignedMembers": [],
+        "priority": "Medium",
         "createdAt": firestore.SERVER_TIMESTAMP
     }
     _, proj_ref = db.collection('projects').add(project_data)
@@ -152,7 +159,16 @@ async def assign_members(project_id: str, assignment: ProjectAssignment, user: d
         raise HTTPException(status_code=403, detail="CEO access required")
     
     proj_ref = db.collection('projects').document(project_id)
-    proj_ref.update({"assignedMembers": assignment.member_emails})
+    update_data = {
+        "assignedMembers": assignment.member_emails,
+        "status": "in-progress"
+    }
+    if assignment.priority:
+        update_data["priority"] = assignment.priority
+    if assignment.deadline:
+        update_data["deadline"] = assignment.deadline
+        
+    proj_ref.update(update_data)
     return {"status": "success", "assigned": assignment.member_emails}
 
 @app.post("/api/reports")
@@ -194,7 +210,11 @@ async def get_projects(user: dict = Depends(get_current_user)):
 
     if user_role == 'CEO':
         docs = db.collection('projects').stream()
+    elif user_role == 'Client':
+        # Clients see projects they requested
+        docs = db.collection('projects').where('clientId', '==', user['uid']).stream()
     else:
+        # Team members see assigned projects
         docs = db.collection('projects').where('assignedMembers', 'array-contains', user_email).stream()
     
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
@@ -221,8 +241,19 @@ async def get_reports_per_project(project_id: str, user: dict = Depends(get_curr
         if not proj_doc.exists or user.get('email') not in proj_doc.to_dict().get('assignedMembers', []):
             raise HTTPException(status_code=403, detail="Access Denied")
 
-    docs = db.collection('reports').where('projectId', '==', project_id).order_by('timestamp', direction=firestore.Query.DESCENDING).stream()
-    return [{**doc.to_dict(), "id": doc.id} for doc in docs]
+    docs = db.collection('reports').where('projectId', '==', project_id).stream()
+    reports = [{**doc.to_dict(), "id": doc.id} for doc in docs]
+    
+    # Sort in memory to avoid composite index requirements
+    def get_timestamp(x):
+        ts = x.get('timestamp')
+        try:
+            return ts.timestamp() if ts else 0
+        except AttributeError:
+            return 0
+        
+    reports.sort(key=get_timestamp, reverse=True)
+    return reports
 
 @app.get("/api/users")
 async def get_all_users(user: dict = Depends(get_current_user)):
@@ -244,6 +275,69 @@ async def get_all_users(user: dict = Depends(get_current_user)):
             "status": "active" # Placeholder or derived from last activity
         })
     return users
+
+# --- Messaging Endpoints ---
+
+@app.post("/api/projects/{project_id}/messages")
+async def send_message(project_id: str, msg: Message, user: dict = Depends(get_current_user)):
+    user_email = user.get('email')
+    user_role_doc = db.collection('users').document(user['uid']).get()
+    user_role = user_role_doc.to_dict().get('role') if user_role_doc.exists else "Client"
+    
+    # Check access (CEO always has access, others if linked/assigned)
+    if user_role != 'CEO':
+        proj_doc = db.collection('projects').document(project_id).get()
+        if not proj_doc.exists:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        proj_data = proj_doc.to_dict()
+        if user_role == 'Client' and proj_data.get('clientId') != user['uid']:
+            raise HTTPException(status_code=403, detail="Access denied")
+        if user_role == 'Member' and user_email not in proj_data.get('assignedMembers', []):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    message_data = {
+        "projectId": project_id,
+        "senderId": user['uid'],
+        "senderName": user.get('name') or user.get('displayName') or user_email,
+        "senderRole": user_role,
+        "content": msg.content,
+        "timestamp": firestore.SERVER_TIMESTAMP
+    }
+    _, msg_ref = db.collection('messages').add(message_data)
+    return {"id": msg_ref.id, "status": "success"}
+
+@app.get("/api/projects/{project_id}/messages")
+async def get_messages(project_id: str, user: dict = Depends(get_current_user)):
+    user_email = user.get('email')
+    user_role_doc = db.collection('users').document(user['uid']).get()
+    user_role = user_role_doc.to_dict().get('role') if user_role_doc.exists else "Client"
+    
+    # Check access
+    if user_role != 'CEO':
+        proj_doc = db.collection('projects').document(project_id).get()
+        if not proj_doc.exists:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        proj_data = proj_doc.to_dict()
+        if user_role == 'Client' and proj_data.get('clientId') != user['uid']:
+            raise HTTPException(status_code=403, detail="Access denied")
+        if user_role == 'Member' and user_email not in proj_data.get('assignedMembers', []):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    docs = db.collection('messages').where('projectId', '==', project_id).stream()
+    messages = [{**doc.to_dict(), "id": doc.id} for doc in docs]
+    
+    # Sort in memory to avoid composite index requirements
+    def get_timestamp(x):
+        ts = x.get('timestamp')
+        try:
+            return ts.timestamp() if ts else 0
+        except AttributeError:
+            return 0
+            
+    messages.sort(key=get_timestamp)
+    return messages
 
 if __name__ == "__main__":
     import uvicorn
