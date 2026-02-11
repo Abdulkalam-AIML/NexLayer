@@ -15,20 +15,8 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
 
-        // Check for Mock Auth first
-        const mockUser = MOCK_USERS.find(u => u.email === email.toLowerCase());
-        const validPassword = mockUser?.password || DEV_PASSWORD;
-
-        if (mockUser && password === validPassword) {
-            localStorage.setItem('dev-mock-auth', JSON.stringify({
-                uid: `mock-${mockUser.role.toLowerCase()}-${Date.now()}`,
-                email: mockUser.email,
-                name: mockUser.name,
-                role: mockUser.role
-            }));
-            navigate('/dashboard');
-            return;
-        }
+        // Clear any old mock data
+        localStorage.removeItem('dev-mock-auth');
 
         try {
             await signInWithEmailAndPassword(auth, email, password);

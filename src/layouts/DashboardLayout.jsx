@@ -17,20 +17,7 @@ const DashboardLayout = () => {
 
     useEffect(() => {
         const checkAuth = async () => {
-            // Check for Dev Mock Auth first
-            const mockAuthData = localStorage.getItem('dev-mock-auth');
-            if (mockAuthData) {
-                try {
-                    const mockUser = JSON.parse(mockAuthData);
-                    setUser(mockUser);
-                    setRole(mockUser.role || 'Member');
-                    setLoading(false);
-                    return;
-                } catch (e) {
-                    console.error("Invalid mock auth data", e);
-                    localStorage.removeItem('dev-mock-auth');
-                }
-            }
+            // Mock auth logic removed to ensure real Firestore roles are used
 
             const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
                 if (currentUser) {
