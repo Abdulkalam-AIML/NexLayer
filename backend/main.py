@@ -43,7 +43,12 @@ security = HTTPBearer()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://nex-layer.vercel.app",
+        "https://nexlayer-f787f.web.app",
+        "http://localhost:5173",
+        "http://localhost:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -107,7 +112,7 @@ async def get_all_requests(user: dict = Depends(get_current_user)):
     if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
         raise HTTPException(status_code=403, detail="CEO access required")
     
-    docs = db.collection('clientRequests').where('status', '==', 'pending').stream()
+    docs = db.collection('requests').where('status', '==', 'pending').stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 
 @app.patch("/api/requests/{request_id}/approve")
@@ -116,7 +121,7 @@ async def approve_request(request_id: str, user: dict = Depends(get_current_user
     if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
         raise HTTPException(status_code=403, detail="CEO access required")
     
-    req_ref = db.collection('clientRequests').document(request_id)
+    req_ref = db.collection('requests').document(request_id)
     req_doc = req_ref.get()
     if not req_doc.exists:
         raise HTTPException(status_code=404, detail="Request not found")
