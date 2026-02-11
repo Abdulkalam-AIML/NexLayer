@@ -76,6 +76,7 @@ const Projects = () => {
                 const projectRef = doc(db, "projects", editingProject.id);
                 await updateDoc(projectRef, {
                     projectTitle: formData.title,
+                    topic: formData.title, // Add topic for Overview compatibility
                     clientName: formData.client,
                     description: formData.description,
                     deadline: formData.deadline,
@@ -87,6 +88,7 @@ const Projects = () => {
                 // Create new project
                 await addDoc(collection(db, "projects"), {
                     projectTitle: formData.title,
+                    topic: formData.title, // Add topic for Overview compatibility
                     clientName: formData.client,
                     description: formData.description,
                     deadline: formData.deadline,

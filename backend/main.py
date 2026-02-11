@@ -132,8 +132,11 @@ async def approve_request(request_id: str, user: dict = Depends(get_current_user
         "clientName": data['name'],
         "clientPhone": data['phone'],
         "topic": data['topic'],
+        "projectTitle": data['topic'], # Map topic to projectTitle for consistency
         "deadline": data['deadline'],
         "status": "active",
+        "description": data['description'],
+        "progress": 0,
         "assignedMembers": [],
         "createdAt": firestore.SERVER_TIMESTAMP
     }
