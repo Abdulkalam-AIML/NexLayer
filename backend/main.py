@@ -255,6 +255,10 @@ async def get_reports_per_project(project_id: str, user: dict = Depends(get_curr
     reports.sort(key=get_timestamp, reverse=True)
     return reports
 
+@app.get("/")
+async def root():
+    return {"status": "online", "version": "1.0.2", "timestamp": "2026-02-12T07:15:00Z"}
+
 @app.get("/api/users")
 async def get_all_users(user: dict = Depends(get_current_user)):
     user_doc = db.collection('users').document(user['uid']).get()
