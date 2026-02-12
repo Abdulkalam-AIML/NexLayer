@@ -230,6 +230,7 @@ async def get_projects(user: dict = Depends(get_current_user)):
 
 @app.post("/api/projects")
 async def create_project_api(project: ProjectSchema, user: dict = Depends(get_current_user)):
+    print(f"DEBUG: Project creation attempt by {user.get('email')}")
     user_doc = db.collection('users').document(user['uid']).get()
     if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
         raise HTTPException(status_code=403, detail="CEO access required")
