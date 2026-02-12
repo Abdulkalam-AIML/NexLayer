@@ -31,13 +31,14 @@ const Sidebar = ({ role }) => {
             { name: 'Projects', path: '/dashboard/projects', icon: <FolderKanban size={20} /> },
             { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
             { name: 'Team', path: '/dashboard/team', icon: <Users size={20} /> },
+            { name: 'Project Request', path: '/dashboard/request', icon: <FolderOpen size={20} /> },
             { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} /> },
         ];
     } else if (role === 'Client') {
         navItems = [
             { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
             { name: 'My Projects', path: '/dashboard/projects', icon: <FolderKanban size={20} /> },
-            { name: 'Request Project', path: '/dashboard/request', icon: <Plus size={20} /> },
+            { name: 'Request Project', path: '/dashboard/request', icon: <FolderOpen size={20} /> },
         ];
     } else {
         // Team Member
@@ -45,6 +46,7 @@ const Sidebar = ({ role }) => {
             { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
             { name: 'My Tasks', path: '/dashboard/projects', icon: <CheckSquare size={20} /> },
             { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
+            { name: 'Submit Request', path: '/dashboard/request', icon: <FolderOpen size={20} /> },
         ];
     }
 
