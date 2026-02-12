@@ -43,5 +43,10 @@ service cloud.firestore {
       allow read: if isCEO() || (isMember() && request.auth.uid == resource.data.memberId);
       allow create: if isMember();
     }
+
+    // Messages: Authenticated users can read/write for now (can be tightened later)
+    match /messages/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
   }
 }
