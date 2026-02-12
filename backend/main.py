@@ -78,6 +78,15 @@ class DailyReport(BaseModel):
     project_id: str
     work_done: str
     issues: Optional[str] = None
+
+class ProjectSchema(BaseModel):
+    projectTitle: str
+    clientName: str
+    description: str
+    deadline: str
+    progress: Optional[int] = 0
+    assignedMembers: Optional[List[str]] = []
+    status: Optional[str] = "Active"
     next_task: str
 
 class Message(BaseModel):
@@ -218,6 +227,43 @@ async def get_projects(user: dict = Depends(get_current_user)):
         docs = db.collection('projects').where('assignedMembers', 'array-contains', user_email).stream()
     
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
+
+@app.post("/api/projects")
+async def create_project_api(project: ProjectSchema, user: dict = Depends(get_current_user)):
+    user_doc = db.collection('users').document(user['uid']).get()
+    if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
+        raise HTTPException(status_code=403, detail="CEO access required")
+    
+    project_data = project.dict()
+    project_data["topic"] = project.projectTitle # For compatibility
+    project_data["createdAt"] = firestore.SERVER_TIMESTAMP
+    
+    _, proj_ref = db.collection('projects').add(project_data)
+    return {"id": proj_ref.id, "status": "success"}
+
+@app.patch("/api/projects/{project_id}")
+async def update_project_api(project_id: str, project: dict, user: dict = Depends(get_current_user)):
+    user_doc = db.collection('users').document(user['uid']).get()
+    if not user_doc.exists:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    user_role = user_doc.to_dict().get('role')
+    
+    # Check access
+    if user_role != 'CEO':
+        # Members can only update progress
+        if list(project.keys()) != ['progress']:
+             raise HTTPException(status_code=403, detail="Only CEO can edit full project details")
+        
+        # Verify member is assigned to this project
+        proj_doc = db.collection('projects').document(project_id).get()
+        if not proj_doc.exists:
+            raise HTTPException(status_code=404, detail="Project not found")
+        if user.get('email') not in proj_doc.to_dict().get('assignedMembers', []):
+            raise HTTPException(status_code=403, detail="Member not assigned to this project")
+
+    db.collection('projects').document(project_id).update(project)
+    return {"status": "success"}
 
 @app.get("/api/reports")
 async def get_all_reports(user: dict = Depends(get_current_user)):

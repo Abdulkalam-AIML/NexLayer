@@ -125,30 +125,33 @@ const Projects = () => {
         e.preventDefault();
         try {
             if (editingProject) {
-                // Update existing project
-                const projectRef = doc(db, "projects", editingProject.id);
-                await updateDoc(projectRef, {
-                    projectTitle: formData.title,
-                    topic: formData.title, // Add topic for Overview compatibility
-                    clientName: formData.client,
-                    description: formData.description,
-                    deadline: formData.deadline,
-                    progress: formData.progress || 0,
-                    assignedMembers: formData.assignedMembers,
-                    status: formData.status
+                // Update existing project via Backend API
+                await callApi(`/api/projects/${editingProject.id}`, {
+                    method: 'PATCH',
+                    data: {
+                        projectTitle: formData.title,
+                        topic: formData.title,
+                        clientName: formData.client,
+                        description: formData.description,
+                        deadline: formData.deadline,
+                        progress: formData.progress || 0,
+                        assignedMembers: formData.assignedMembers,
+                        status: formData.status
+                    }
                 });
             } else {
-                // Create new project
-                await addDoc(collection(db, "projects"), {
-                    projectTitle: formData.title,
-                    topic: formData.title, // Add topic for Overview compatibility
-                    clientName: formData.client,
-                    description: formData.description,
-                    deadline: formData.deadline,
-                    progress: formData.progress || 0,
-                    assignedMembers: formData.assignedMembers,
-                    status: formData.status,
-                    createdAt: serverTimestamp()
+                // Create new project via Backend API
+                await callApi('/api/projects', {
+                    method: 'POST',
+                    data: {
+                        projectTitle: formData.title,
+                        clientName: formData.client,
+                        description: formData.description,
+                        deadline: formData.deadline,
+                        progress: formData.progress || 0,
+                        assignedMembers: formData.assignedMembers,
+                        status: formData.status
+                    }
                 });
             }
 
@@ -211,7 +214,7 @@ const Projects = () => {
                     placeholder="Search projects..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full bg-nex-dark border border-white/10 rounded-lg py-2 pl-10 pr-4 text-black focus:border-nex-purple focus:outline-none"
+                    className="w-full bg-nex-dark border border-white/10 rounded-lg py-2 pl-10 pr-4 text-white focus:border-nex-purple focus:outline-none placeholder:text-gray-500"
                 />
             </div>
 
@@ -305,26 +308,26 @@ const Projects = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-sm text-gray-600 mb-1">Project Title</label>
-                                            <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
+                                            <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none" value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
                                         </div>
                                         <div>
                                             <label className="block text-sm text-gray-600 mb-1">Client Name</label>
-                                            <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={formData.client} onChange={e => setFormData({ ...formData, client: e.target.value })} />
+                                            <input required type="text" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none" value={formData.client} onChange={e => setFormData({ ...formData, client: e.target.value })} />
                                         </div>
                                     </div>
                                 )}
 
                                 {(role === 'Member' || role === 'Client') && (
                                     <div className="p-4 bg-nex-purple/10 rounded-lg border border-nex-purple/20 mb-4">
-                                        <h3 className="text-lg font-bold text-black">{formData.title}</h3>
-                                        <p className="text-sm text-gray-600">Client: {formData.client}</p>
+                                        <h3 className="text-lg font-bold text-white">{formData.title}</h3>
+                                        <p className="text-sm text-gray-400">Client: {formData.client}</p>
                                     </div>
                                 )}
 
                                 {role === 'CEO' && (
                                     <div>
                                         <label className="block text-sm text-gray-600 mb-1">Description</label>
-                                        <textarea className="w-full bg-black/40 border border-white/10 rounded p-2 text-black h-24" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
+                                        <textarea className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none h-24" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}></textarea>
                                     </div>
                                 )}
 
@@ -332,20 +335,20 @@ const Projects = () => {
                                     {role === 'CEO' && (
                                         <div>
                                             <label className="block text-sm text-gray-600 mb-1">Deadline</label>
-                                            <input required type="date" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
+                                            <input required type="date" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none color-scheme-dark" value={formData.deadline} onChange={e => setFormData({ ...formData, deadline: e.target.value })} />
                                         </div>
                                     )}
                                     <div className={role === 'Member' ? 'md:col-span-2' : role === 'Client' ? 'md:col-span-3' : ''}>
                                         <label className="block text-sm text-gray-600 mb-1">Progress (%)</label>
                                         <input
                                             disabled={role === 'Client'}
-                                            type="number" min="0" max="100" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black disabled:opacity-50" value={formData.progress || 0} onChange={e => setFormData({ ...formData, progress: parseInt(e.target.value) })} />
+                                            type="number" min="0" max="100" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none disabled:opacity-50" value={formData.progress || 0} onChange={e => setFormData({ ...formData, progress: parseInt(e.target.value) })} />
                                     </div>
                                     {role !== 'Client' && (
                                         <div>
                                             <label className="block text-sm text-gray-600 mb-1">Status</label>
                                             <select
-                                                className="w-full bg-black/40 border border-white/10 rounded p-2 text-black appearance-none"
+                                                className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none appearance-none"
                                                 value={formData.status}
                                                 onChange={e => setFormData({ ...formData, status: e.target.value })}
                                             >
