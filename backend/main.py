@@ -4,6 +4,7 @@ from firebase_admin import credentials, auth, firestore
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
@@ -90,14 +91,20 @@ async def request_firewall(request: Request, call_next):
     for pattern in MALICIOUS_PATTERNS:
         if pattern.lower() in query_params:
             log_security_event("FIREWALL_BLOCK", {"pattern": pattern, "source": "query_params"}, request)
-            raise HTTPException(status_code=403, detail="Security Firewall: Malicious pattern detected in URL")
+            return JSONResponse(
+                status_code=403,
+                content={"detail": "Security Firewall: Malicious pattern detected in URL", "code": "FIREWALL_BLOCK"}
+            )
     
     # Scan headers
     for header, value in request.headers.items():
         for pattern in MALICIOUS_PATTERNS:
             if pattern.lower() in value.lower():
                 log_security_event("FIREWALL_BLOCK", {"pattern": pattern, "source": f"header:{header}"}, request)
-                raise HTTPException(status_code=403, detail="Security Firewall: Malicious pattern detected in headers")
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "Security Firewall: Malicious pattern detected in headers", "code": "FIREWALL_BLOCK"}
+                )
 
     response = await call_next(request)
     return response

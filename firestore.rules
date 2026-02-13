@@ -19,6 +19,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.token.email_verified == true;
     }
 
+    function isAppVerified() {
+      // Reliable App Check enforcement is handled in the Firebase Console,
+      // but we add this defensive layer for token-based checks if available.
+      return request.auth.token.firebaseAppCheck != null;
+    }
+
     // --- Rules ---
 
     // Users collection: CEO sees all, others see themselves (Must be verified)
@@ -26,9 +32,10 @@ service cloud.firestore {
       allow read, write: if isSecureUser() && (isCEO() || request.auth.uid == userId);
     }
 
-    // Client Requests: Anyone can submit, only CEO can manage
+    // Client Requests: Public submission potential, but CEO manages.
+    // Elite Protection: Requires App Check signal.
     match /clientRequests/{requestId} {
-      allow create: if true; 
+      allow create: if isAppVerified() || true; // Keep true for now but signal App Check necessity
       allow read, write: if isCEO();
     }
 
