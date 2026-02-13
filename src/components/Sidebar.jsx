@@ -10,7 +10,8 @@ import {
     Users,
     FolderOpen,
     Settings,
-    LogOut
+    LogOut,
+    ShieldAlert
 } from 'lucide-react';
 import Logo from './Logo';
 
@@ -33,6 +34,7 @@ const Sidebar = ({ role }) => {
             { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
             { name: 'Team', path: '/dashboard/team', icon: <Users size={20} /> },
             { name: 'Project Request', path: '/dashboard/request', icon: <FolderOpen size={20} /> },
+            { name: 'Security', path: '/dashboard/security', icon: <ShieldAlert size={20} /> },
             { name: 'Settings', path: '/dashboard/settings', icon: <Settings size={20} /> },
         ];
     } else if (role === 'Client') {

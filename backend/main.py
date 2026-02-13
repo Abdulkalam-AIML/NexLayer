@@ -67,21 +67,46 @@ MALICIOUS_PATTERNS = [
     "cmd.exe", "/bin/sh"
 ]
 
+# --- Security Logging Helper ---
+def log_security_event(event_type: str, details: dict, request: Request):
+    try:
+        event_data = {
+            "type": event_type,
+            "ip": request.client.host if request.client else "unknown",
+            "path": str(request.url.path),
+            "method": request.method,
+            "timestamp": datetime.utcnow().isoformat(),
+            "details": details,
+            "userAgent": request.headers.get("user-agent", "unknown")
+        }
+        db.collection("security_logs").add(event_data)
+    except Exception as e:
+        print(f"Failed to log security event: {e}")
+
 @app.middleware("http")
 async def request_firewall(request: Request, call_next):
     # Scan query parameters
     query_params = str(request.query_params).lower()
     for pattern in MALICIOUS_PATTERNS:
         if pattern.lower() in query_params:
+            log_security_event("FIREWALL_BLOCK", {"pattern": pattern, "source": "query_params"}, request)
             raise HTTPException(status_code=403, detail="Security Firewall: Malicious pattern detected in URL")
     
     # Scan headers
     for header, value in request.headers.items():
         for pattern in MALICIOUS_PATTERNS:
             if pattern.lower() in value.lower():
+                log_security_event("FIREWALL_BLOCK", {"pattern": pattern, "source": f"header:{header}"}, request)
                 raise HTTPException(status_code=403, detail="Security Firewall: Malicious pattern detected in headers")
 
     response = await call_next(request)
+    return response
+
+@app.middleware("http")
+async def security_audit_logging(request: Request, call_next):
+    response = await call_next(request)
+    if response.status_code in [401, 403]:
+        log_security_event("AUTH_FAILURE", {"status_code": response.status_code}, request)
     return response
 
 @app.middleware("http")

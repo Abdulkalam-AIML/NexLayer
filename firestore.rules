@@ -56,6 +56,11 @@ service cloud.firestore {
       );
     }
 
+    // Security Logs: CEO only
+    match /security_logs/{logId} {
+      allow read, write: if isCEO();
+    }
+
     // Data Validation Schema
     function data() { return resource.data; }
   }

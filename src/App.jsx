@@ -13,6 +13,7 @@ import Team from './pages/dashboard/Team';
 import Files from './pages/dashboard/Files';
 import Settings from './pages/dashboard/Settings';
 import Request from './pages/dashboard/Request';
+import Security from './pages/dashboard/Security';
 
 import { ThemeProvider } from './context/ThemeContext';
 
@@ -41,6 +42,7 @@ function App() {
               <Route path="files" element={<Files />} />
               <Route path="settings" element={<Settings />} />
               <Route path="request" element={<Request />} />
+              <Route path="security" element={<Security />} />
             </Route>
           </Routes>
         </Router>
