@@ -87,6 +87,14 @@ class ProjectSchema(BaseModel):
     progress: Optional[int] = 0
     assignedMembers: Optional[List[str]] = []
     status: Optional[str] = "Active"
+
+class TaskSchema(BaseModel):
+    title: str
+    projectId: str
+    assignedTo: str
+    deadline: str
+    priority: Optional[str] = "Medium"
+    status: Optional[str] = "Pending"
     next_task: str
 
 class Message(BaseModel):
@@ -264,6 +272,30 @@ async def update_project_api(project_id: str, project: dict, user: dict = Depend
             raise HTTPException(status_code=403, detail="Member not assigned to this project")
 
     db.collection('projects').document(project_id).update(project)
+    return {"status": "success"}
+
+@app.get("/api/tasks")
+async def get_all_tasks(user: dict = Depends(get_current_user)):
+    docs = db.collection('tasks').stream()
+    return [{**doc.to_dict(), "id": doc.id} for doc in docs]
+
+@app.post("/api/tasks")
+async def create_task_api(task: TaskSchema, user: dict = Depends(get_current_user)):
+    user_doc = db.collection('users').document(user['uid']).get()
+    if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
+        raise HTTPException(status_code=403, detail="CEO access required")
+    
+    task_data = task.dict()
+    task_data["createdAt"] = firestore.SERVER_TIMESTAMP
+    task_data["createdBy"] = user.get('email')
+    
+    _, task_ref = db.collection('tasks').add(task_data)
+    return {"id": task_ref.id, "status": "success"}
+
+@app.patch("/api/tasks/{task_id}")
+async def update_task_api(task_id: str, task_update: dict, user: dict = Depends(get_current_user)):
+    # Standard update for status/priority
+    db.collection('tasks').document(task_id).update(task_update)
     return {"status": "success"}
 
 @app.get("/api/reports")

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../../lib/firebase';
+import { callApi } from '../../lib/api';
 import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc, query, where } from 'firebase/firestore';
 import { Plus, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
@@ -23,17 +24,19 @@ const Tasks = () => {
 
     useEffect(() => {
         const fetchData = async () => {
-            // Fetch Tasks
-            let q = collection(db, "tasks");
-            // If not CEO, maybe show only assigned?
-            // if (role !== 'CEO') q = query(collection(db, "tasks"), where("assignedMembers", "array-contains", user.email));
+            setLoading(true);
+            try {
+                // Fetch Tasks via API
+                const taskData = await callApi("/api/tasks");
+                setTasks(taskData);
 
-            const taskSnap = await getDocs(q);
-            setTasks(taskSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
-            // Fetch Projects for dropdown
-            const projSnap = await getDocs(collection(db, "projects"));
-            setProjects(projSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+                // Fetch Projects for dropdown via API
+                const projData = await callApi("/api/projects");
+                setProjects(projData);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+            setLoading(false);
         };
         fetchData();
     }, [user]);
@@ -41,24 +44,31 @@ const Tasks = () => {
     const handleCreateTask = async (e) => {
         e.preventDefault();
         try {
-            await addDoc(collection(db, "tasks"), {
-                ...newTask,
-                createdAt: new Date(),
-                createdBy: user.email
+            await callApi("/api/tasks", {
+                method: 'POST',
+                data: newTask
             });
             setIsModalOpen(false);
             setNewTask({ title: '', projectId: '', assignedTo: '', deadline: '', priority: 'Medium', status: 'Pending' });
+
             // Refresh
-            const taskSnap = await getDocs(collection(db, "tasks"));
-            setTasks(taskSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+            const taskData = await callApi("/api/tasks");
+            setTasks(taskData);
         } catch (error) {
             console.error("Error creating task:", error);
         }
     };
 
     const updateStatus = async (id, newStatus) => {
-        await updateDoc(doc(db, "tasks", id), { status: newStatus });
-        setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t));
+        try {
+            await callApi(`/api/tasks/${id}`, {
+                method: 'PATCH',
+                data: { status: newStatus }
+            });
+            setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t));
+        } catch (error) {
+            console.error("Error updating status:", error);
+        }
     };
 
     const getPriorityColor = (p) => {
@@ -134,23 +144,23 @@ const Tasks = () => {
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
                     <div className="bg-nex-dark p-6 rounded-xl border border-white/10 w-full max-w-md">
-                        <h3 className="text-xl font-bold mb-4">Add New Task</h3>
+                        <h3 className="text-xl font-bold mb-4 text-white">Add New Task</h3>
                         <form onSubmit={handleCreateTask} className="space-y-4">
-                            <input required type="text" placeholder="Task Title" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })} />
+                            <input required type="text" placeholder="Task Title" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none" value={newTask.title} onChange={e => setNewTask({ ...newTask, title: e.target.value })} />
 
-                            <select className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newTask.projectId} onChange={e => setNewTask({ ...newTask, projectId: e.target.value })}>
-                                <option value="">Select Project</option>
-                                {projects.map(p => <option key={p.id} value={p.id}>{p.projectTitle}</option>)}
+                            <select className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none" value={newTask.projectId} onChange={e => setNewTask({ ...newTask, projectId: e.target.value })}>
+                                <option value="" className="bg-nex-dark">Select Project</option>
+                                {projects.map(p => <option key={p.id} value={p.id} className="bg-nex-dark">{p.projectTitle}</option>)}
                             </select>
 
-                            <input required type="text" placeholder="Assign To (Email)" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })} />
+                            <input required type="text" placeholder="Assign To (Email)" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none" value={newTask.assignedTo} onChange={e => setNewTask({ ...newTask, assignedTo: e.target.value })} />
 
                             <div className="grid grid-cols-2 gap-4">
-                                <input required type="date" className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newTask.deadline} onChange={e => setNewTask({ ...newTask, deadline: e.target.value })} />
-                                <select className="w-full bg-black/40 border border-white/10 rounded p-2 text-black" value={newTask.priority} onChange={e => setNewTask({ ...newTask, priority: e.target.value })}>
-                                    <option value="Low">Low</option>
-                                    <option value="Medium">Medium</option>
-                                    <option value="High">High</option>
+                                <input required type="date" className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none color-scheme-dark" value={newTask.deadline} onChange={e => setNewTask({ ...newTask, deadline: e.target.value })} />
+                                <select className="w-full bg-black/40 border border-white/10 rounded p-2 text-white focus:border-nex-purple outline-none" value={newTask.priority} onChange={e => setNewTask({ ...newTask, priority: e.target.value })}>
+                                    <option value="Low" className="bg-nex-dark">Low</option>
+                                    <option value="Medium" className="bg-nex-dark">Medium</option>
+                                    <option value="High" className="bg-nex-dark">High</option>
                                 </select>
                             </div>
 
