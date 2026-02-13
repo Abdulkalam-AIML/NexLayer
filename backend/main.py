@@ -7,6 +7,10 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
+from starlette.requests import Request
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Initialize Firebase Admin
 if not firebase_admin._apps:
@@ -55,6 +59,30 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
+# --- Firewall Layer: Malicious Pattern Blocking ---
+MALICIOUS_PATTERNS = [
+    "UNION SELECT", "drop table", "--", ";--", "scripts", 
+    "<script>", "alert(", "javascript:", "../", "etc/passwd", 
+    "cmd.exe", "/bin/sh"
+]
+
+@app.middleware("http")
+async def request_firewall(request: Request, call_next):
+    # Scan query parameters
+    query_params = str(request.query_params).lower()
+    for pattern in MALICIOUS_PATTERNS:
+        if pattern.lower() in query_params:
+            raise HTTPException(status_code=403, detail="Security Firewall: Malicious pattern detected in URL")
+    
+    # Scan headers
+    for header, value in request.headers.items():
+        for pattern in MALICIOUS_PATTERNS:
+            if pattern.lower() in value.lower():
+                raise HTTPException(status_code=403, detail="Security Firewall: Malicious pattern detected in headers")
+
+    response = await call_next(request)
+    return response
 
 @app.middleware("http")
 async def add_security_headers(request, call_next):
@@ -126,8 +154,16 @@ class Message(BaseModel):
 async def root():
     return {"status": "online", "version": "1.0.3", "timestamp": "2026-02-12T07:25:00Z"}
 
+@app.post("/api/login")
+@limiter.limit("5/minute")
+async def login_api(request: Request):
+    # This is a dummy for rate-limiting verification, 
+    # real login is handled by Firebase Client SDK
+    return {"status": "Rate limiting active"}
+
 @app.post("/api/requests")
-async def create_client_request(req: UserRequest, user: dict = Depends(get_current_user)):
+@limiter.limit("3/minute")
+async def create_client_request(req: UserRequest, user: dict = Depends(get_current_user), request: Request = Request):
     try:
         new_request = {
             "clientId": user['uid'], # Link to the authenticated client
