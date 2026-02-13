@@ -28,11 +28,6 @@ export const MOCK_USERS = [
         role: "Marketing",
     },
     {
-        name: "Syed Fida",
-        email: "syedfidaemohmmed@gmail.com",
-        role: "Helper",
-    },
-    {
         name: "Mock Client",
         email: "client@nexlayer.com",
         role: "Client",

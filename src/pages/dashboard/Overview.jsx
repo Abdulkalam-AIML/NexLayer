@@ -203,7 +203,6 @@ const Overview = () => {
                                     { name: 'Aneesh Ram', role: 'Admin Head', status: 'online' },
                                     { name: 'Deva', role: 'Operations', status: 'online' },
                                     { name: 'Vinay', role: 'Marketing', status: 'online' },
-                                    { name: 'Syed Fida', role: 'Helper', status: 'online' },
                                 ].map((member) => (
                                     <div key={member.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">

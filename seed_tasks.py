@@ -13,16 +13,14 @@ FOUNDERS = {
     "CTO": "akhilnadhdonka@gmail.com",
     "Operations": "intidevaonyx@gmail.com",
     "Admin Head": "aggalaaneeshram@gmail.com",
-    "Marketing": "vinayrajchinnam@gmail.com",
-    "Helper": "syedfidaemohmmed@gmail.com"
+    "Marketing": "vinayrajchinnam@gmail.com"
 }
 
 ROLE_TASKS = {
     "CTO": ["Architecture Review", "Security implementation", "API performance tuning", "Lead backend sprint", "Cloud infra setup", "Code quality audit"],
     "Admin Head": ["Resource planning", "Client contract review", "Budget allocation", "Stakeholder reporting", "Compliance check", "Executive summary"],
     "Operations": ["Workflow automation", "Delivery timeline audit", "Project risk assessment", "Standardize SOPs", "Cross-team sync", "Logistics coordination"],
-    "Marketing": ["Brand strategy dev", "GTM plan execution", "Social media campaign", "Client acquisition", "Content calendar review", "SEO optimization"],
-    "Helper": ["Support ticket resolution", "Documentation backup", "System health check", "Team meeting minutes", "Administrative support", "Inventory management"]
+    "Marketing": ["Brand strategy dev", "GTM plan execution", "Social media campaign", "Client acquisition", "Content calendar review", "SEO optimization"]
 }
 
 def seed_tasks():

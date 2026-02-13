@@ -61,17 +61,6 @@ const teamMembers = [
             instagram: "https://www.instagram.com/___vinayraj___official"
         },
         icon: <User size={24} className="text-red-500" />
-    },
-    {
-        name: "Syed Fida E Mohmmed",
-        role: "Team Support",
-        specialty: "Technical Assistance",
-        skills: ["Support", "Communication", "Tech Operations"],
-        contact: {
-            phone: "6303301868",
-            email: "syedfidaemohmmed@gmail.com",
-        },
-        icon: <User size={24} className="text-cyan-500" />
     }
 ];
 

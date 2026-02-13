@@ -17,8 +17,7 @@ FOUNDERS = {
     "CTO": "akhilnadhdonka@gmail.com",
     "Operations": "intidevaonyx@gmail.com",
     "Admin Head": "aggalaaneeshram@gmail.com",
-    "Marketing": "vinayrajchinnam@gmail.com",
-    "Helper": "syedfidaemohmmed@gmail.com"
+    "Marketing": "vinayrajchinnam@gmail.com"
 }
 
 def seed_users():
