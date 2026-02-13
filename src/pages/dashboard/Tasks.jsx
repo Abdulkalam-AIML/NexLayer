@@ -8,9 +8,10 @@ import { Plus, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 const Tasks = () => {
     const { user, role } = useOutletContext();
     const [tasks, setTasks] = useState([]);
-    const [projects, setProjects] = useState([]); // Needed for task assignment
-    const [isTaskId, setIsTaskId] = useState(null); // For editing/modal
+    const [projects, setProjects] = useState([]);
+    const [isTaskId, setIsTaskId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     // New Task Form
     const [newTask, setNewTask] = useState({
@@ -125,9 +126,9 @@ const Tasks = () => {
                                             <option value="Done">Done</option>
                                         </select>
                                     </div>
-                                    <h4 className="font-bold text-black mb-1">{task.title}</h4>
-                                    <p className="text-xs text-gray-600 mb-2">
-                                        {projects.find(p => p.id === task.projectId)?.projectTitle || 'Unknown Project'}
+                                    <h4 className="font-bold text-black dark:text-white mb-1">{task.title}</h4>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                        {projects.find(p => p.id === task.projectId)?.projectTitle || task.projectTitle || 'Unknown Project'}
                                     </p>
                                     <div className="flex justify-between items-end mt-3 border-t border-white/5 pt-3">
                                         <p className="text-xs text-gray-500">To: {task.assignedTo}</p>

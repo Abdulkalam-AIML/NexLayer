@@ -276,6 +276,7 @@ async def update_project_api(project_id: str, project: dict, user: dict = Depend
 
 @app.get("/api/tasks")
 async def get_all_tasks(user: dict = Depends(get_current_user)):
+    # Founders can see all tasks; logic can be refined for Clients later
     docs = db.collection('tasks').stream()
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 

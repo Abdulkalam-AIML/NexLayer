@@ -87,8 +87,32 @@ const DashboardLayout = () => {
             )}
 
             {/* Main Content Area */}
-            <main className="flex-1 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0">
-                <Outlet context={{ user, role }} />
+            <main className="flex-1 p-4 md:p-8 overflow-y-auto mt-16 md:mt-0 bg-[#f8fafc] dark:bg-nex-black transition-colors duration-300">
+                <div className="max-w-7xl mx-auto">
+                    {/* Persistent Header for Name/Role */}
+                    <div className="flex justify-between items-center mb-6 border-b border-black/5 dark:border-white/5 pb-4">
+                        <div>
+                            <h2 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                {role || 'User'} Dashboard
+                            </h2>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-lg font-bold text-black dark:text-white">
+                                {user?.displayName || (role === 'CEO' ? 'Syed Abdul Kalam' : user?.email?.split('@')[0])}
+                            </p>
+                            <p className="text-xs text-nex-purple font-medium uppercase tracking-tighter">
+                                {role === 'CEO' ? 'Chief Executive Officer' :
+                                    role === 'CTO' ? 'Chief Technology Officer' :
+                                        role === 'Admin Head' ? 'Administrative Head' :
+                                            role === 'Operations' ? 'Operations Executor' :
+                                                role === 'Marketing' ? 'Marketing Lead' :
+                                                    role === 'Helper' ? 'Lead Helper' : role}
+                            </p>
+                        </div>
+                    </div>
+                    <Outlet context={{ user, role }} />
+                </div>
             </main>
         </div>
     );

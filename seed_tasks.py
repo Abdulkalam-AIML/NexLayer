@@ -9,20 +9,21 @@ if not firebase_admin._apps:
     firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-TEAM_MEMBERS = [
-    "akhilnadhdonka@gmail.com",
-    "intidevaonyx@gmail.com",
-    "aggalaaneeshram@gmail.com",
-    "vinayrajchinnam@gmail.com",
-    "syedfidaemohmmed@gmail.com"
-]
+FOUNDERS = {
+    "CTO": "akhilnadhdonka@gmail.com",
+    "Operations": "intidevaonyx@gmail.com",
+    "Admin Head": "aggalaaneeshram@gmail.com",
+    "Marketing": "vinayrajchinnam@gmail.com",
+    "Helper": "syedfidaemohmmed@gmail.com"
+}
 
-TASK_TITLES = [
-    "Design UI Mockups", "Implement Backend Auth", "Database Schema Optimization",
-    "Frontend API Integration", "Write Unit Tests", "Deploy to Staging",
-    "Client Review Session", "Bug Fixing Phase 1", "Performance Benchmarking",
-    "Documentation Update", "Security Audit", "Final QA Testing"
-]
+ROLE_TASKS = {
+    "CTO": ["Architecture Review", "Security implementation", "API performance tuning", "Lead backend sprint", "Cloud infra setup", "Code quality audit"],
+    "Admin Head": ["Resource planning", "Client contract review", "Budget allocation", "Stakeholder reporting", "Compliance check", "Executive summary"],
+    "Operations": ["Workflow automation", "Delivery timeline audit", "Project risk assessment", "Standardize SOPs", "Cross-team sync", "Logistics coordination"],
+    "Marketing": ["Brand strategy dev", "GTM plan execution", "Social media campaign", "Client acquisition", "Content calendar review", "SEO optimization"],
+    "Helper": ["Support ticket resolution", "Documentation backup", "System health check", "Team meeting minutes", "Administrative support", "Inventory management"]
+}
 
 def seed_tasks():
     # Get all projects
@@ -37,20 +38,38 @@ def seed_tasks():
 
     total_created = 0
     for proj_id in project_list:
-        # Create 6 tasks for each project
-        for i in range(6):
+        # Assign one specific task for each founder per project
+        for role, email in FOUNDERS.items():
+            task_title = random.choice(ROLE_TASKS[role])
             task_data = {
-                "title": f"{random.choice(TASK_TITLES)} - {i+1}",
+                "title": f"[{role}] {task_title}",
                 "projectId": proj_id,
-                "assignedTo": random.choice(TEAM_MEMBERS),
+                "assignedTo": email,
                 "deadline": (datetime.now() + timedelta(days=random.randint(5, 20))).strftime("%Y-%m-%d"),
                 "priority": random.choice(["Low", "Medium", "High"]),
                 "status": random.choice(["Pending", "In Progress", "Done"]),
                 "createdAt": firestore.SERVER_TIMESTAMP,
-                "createdBy": "abdulkalamro20@gmail.com" # SEO's email
+                "createdBy": "abdulkalamro20@gmail.com"
             }
             db.collection('tasks').add(task_data)
             total_created += 1
+            
+    # Add a few extra tasks to reach exactly 48 if needed (8 projects * 5 founders = 40, need 8 more)
+    # We will just do a final pass for 8 random founders
+    for _ in range(8):
+        role = random.choice(list(FOUNDERS.keys()))
+        task_data = {
+            "title": f"[{role}] Priority {random.choice(ROLE_TASKS[role])}",
+            "projectId": random.choice(project_list),
+            "assignedTo": FOUNDERS[role],
+            "deadline": (datetime.now() + timedelta(days=random.randint(2, 5))).strftime("%Y-%m-%d"),
+            "priority": "High",
+            "status": "Pending",
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "createdBy": "abdulkalamro20@gmail.com"
+        }
+        db.collection('tasks').add(task_data)
+        total_created += 1
             
     print(f"Successfully seeded {total_created} tasks.")
 

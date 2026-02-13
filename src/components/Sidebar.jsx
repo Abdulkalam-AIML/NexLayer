@@ -41,12 +41,13 @@ const Sidebar = ({ role }) => {
             { name: 'Request Project', path: '/dashboard/request', icon: <FolderOpen size={20} /> },
         ];
     } else {
-        // Team Member
+        // Team Member / Founders
         navItems = [
             { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
-            { name: 'My Tasks', path: '/dashboard/projects', icon: <CheckSquare size={20} /> },
+            { name: 'Projects', path: '/dashboard/projects', icon: <FolderKanban size={20} /> },
+            { name: 'Tasks', path: '/dashboard/tasks', icon: <CheckSquare size={20} /> },
             { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
-            { name: 'Submit Request', path: '/dashboard/request', icon: <FolderOpen size={20} /> },
+            { name: 'Project Request', path: '/dashboard/request', icon: <FolderOpen size={20} /> },
         ];
     }
 
