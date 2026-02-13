@@ -41,13 +41,30 @@ app = FastAPI(title="NexLayer Operations System API")
 # Security
 security = HTTPBearer()
 
+# Production Security Configuration
+TRUSTED_ORIGINS = [
+    "https://nex-layer.vercel.app",
+    "http://localhost:5173",  # For local development
+    "http://127.0.0.1:5173"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=TRUSTED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; frame-ancestors 'none'"
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
 
 async def get_current_user(res: HTTPAuthorizationCredentials = Depends(security)):
     try:
@@ -273,8 +290,25 @@ async def update_project_api(project_id: str, project: dict, user: dict = Depend
 
 @app.get("/api/tasks")
 async def get_all_tasks(user: dict = Depends(get_current_user)):
-    # Founders can see all tasks; logic can be refined for Clients later
-    docs = db.collection('tasks').stream()
+    user_email = user.get('email')
+    user_role = user.get('role', 'Member')
+
+    if user_role == 'CEO':
+        docs = db.collection('tasks').stream()
+    else:
+        # Founders only see tasks for projects they are assigned to
+        # 1. Get projects assigned to this user
+        assigned_projects = db.collection('projects').where('assignedMembers', 'array-contains', user_email).stream()
+        assigned_project_ids = [doc.id for doc in assigned_projects]
+        
+        if not assigned_project_ids:
+            return []
+            
+        # 2. Get tasks for those projects
+        # Firestore 'in' limit is 10, but we likely have fewer active projects per founder
+        # If more, we'd need a different query or client-side filter
+        docs = db.collection('tasks').where('projectId', 'in', assigned_project_ids[:10]).stream()
+        
     return [{**doc.to_dict(), "id": doc.id} for doc in docs]
 
 @app.post("/api/tasks")
@@ -292,8 +326,39 @@ async def create_task_api(task: TaskSchema, user: dict = Depends(get_current_use
 
 @app.patch("/api/tasks/{task_id}")
 async def update_task_api(task_id: str, task_update: dict, user: dict = Depends(get_current_user)):
-    # Standard update for status/priority
-    db.collection('tasks').document(task_id).update(task_update)
+    user_email = user.get('email')
+    user_role = user.get('role', 'Member')
+    
+    # 1. Fetch task and check existing project metadata
+    task_ref = db.collection('tasks').document(task_id)
+    task_doc = task_ref.get()
+    
+    if not task_doc.exists:
+        raise HTTPException(status_code=404, detail="Task not found")
+        
+    task_data = task_doc.to_dict()
+    project_id = task_data.get('projectId')
+    
+    # 2. CEO can update anything
+    if user_role == 'CEO':
+        task_ref.update(task_update)
+        return {"status": "success"}
+        
+    # 3. Members must be assigned to the project to update task status
+    proj_doc = db.collection('projects').document(project_id).get()
+    if not proj_doc.exists:
+        raise HTTPException(status_code=404, detail="Project linked to task not found")
+        
+    assigned = proj_doc.to_dict().get('assignedMembers', [])
+    if user_email not in assigned:
+        raise HTTPException(status_code=403, detail="Access denied: You are not assigned to this project")
+        
+    # Restrict what members can update (e.g., only status)
+    allowed_keys = {'status'}
+    if not set(task_update.keys()).issubset(allowed_keys):
+        raise HTTPException(status_code=403, detail="Members can only update task status")
+
+    task_ref.update(task_update)
     return {"status": "success"}
 
 @app.get("/api/reports")

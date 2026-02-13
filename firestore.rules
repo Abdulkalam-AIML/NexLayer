@@ -28,7 +28,7 @@ service cloud.firestore {
       allow read, write: if isCEO();
     }
 
-    // Projects: CEO has full access, Members see assigned, Clients see own
+    // Projects: CEO has full access, Members see ONLY assigned, Clients see ONLY own
     match /projects/{projectId} {
       allow read: if isCEO() || 
                   (isAuthenticated() && request.auth.token.email in resource.data.assignedMembers) ||
@@ -36,15 +36,23 @@ service cloud.firestore {
       allow write: if isCEO();
     }
 
-    // Reports: CEO sees all, Members create/read for assigned projects
+    // Reports: Must be assigned to the project to create a report
     match /reports/{reportId} {
-      allow read: if isCEO() || (isAuthenticated() && request.auth.uid == resource.data.memberId);
-      allow create: if isAuthenticated(); // Backend handles project-specific assignment checks
+      allow read: if isCEO() || (isAuthenticated() && request.auth.uid == data().memberId);
+      allow create: if isAuthenticated() && 
+                    get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.assignedMembers.hasAny([request.auth.token.email]);
     }
 
-    // Messages: CEO sees all, others see messages in projects they are assigned to
+    // Messages: Strict project-level isolation
     match /messages/{messageId} {
-      allow read, write: if isAuthenticated(); // Simplified for now, can be hardened per project
+      allow read, write: if isAuthenticated() && (
+        isCEO() || 
+        get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.assignedMembers.hasAny([request.auth.token.email]) ||
+        get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.clientId == request.auth.uid
+      );
     }
+
+    // Data Validation Schema
+    function data() { return resource.data; }
   }
 }
