@@ -19,7 +19,15 @@ const Login = () => {
         localStorage.removeItem('dev-mock-auth');
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Strict Email Verification Check
+            if (!user.emailVerified) {
+                setError('Please verify your email address to access the dashboard.');
+                return;
+            }
+
             navigate('/dashboard');
         } catch (err) {
             setError('Invalid credentials. Please try again.');
