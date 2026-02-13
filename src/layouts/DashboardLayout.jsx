@@ -25,20 +25,35 @@ const DashboardLayout = () => {
                     setUser(currentUser);
                     console.log("Current User UID:", currentUser.uid);
                     try {
-                        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
-                        if (userDoc.exists()) {
-                            const userData = userDoc.data();
-                            console.log("User Role Found in Firestore:", userData.role);
-                            setRole(userData.role);
-                            if (userData.displayName) setUser(prev => ({ ...prev, displayName: userData.displayName }));
+                        // Professional RBAC: Fetch role from Custom Claims instead of Firestore
+                        const tokenResult = await currentUser.getIdTokenResult(true); // Force refresh to get latest claims
+                        const roleClaim = tokenResult.claims.role;
+
+                        if (roleClaim) {
+                            console.log("User Role Found in Token Claims:", roleClaim);
+                            setRole(roleClaim);
                         } else {
-                            console.warn("No user document found for UID:", currentUser.uid);
+                            // Fallback to Firestore if claims aren't synced yet
+                            console.warn("No role claim found, checking Firestore fallback...");
+                            const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                            if (userDoc.exists()) {
+                                setRole(userDoc.data().role);
+                            } else {
+                                const mockUser = MOCK_USERS.find(u => u.email === currentUser.email);
+                                setRole(mockUser ? mockUser.role : "Member");
+                            }
+                        }
+
+                        // Sync display name if possible
+                        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+                        if (userDoc.exists() && userDoc.data().displayName) {
+                            setUser(prev => ({ ...prev, displayName: userDoc.data().displayName }));
+                        } else {
                             const mockUser = MOCK_USERS.find(u => u.email === currentUser.email);
-                            setRole(mockUser ? mockUser.role : "Member");
                             if (mockUser) setUser(prev => ({ ...prev, displayName: mockUser.name }));
                         }
                     } catch (error) {
-                        console.error("Error fetching role for UID", currentUser.uid, ":", error);
+                        console.error("Error fetching identity/role:", error);
                         const mockUser = MOCK_USERS.find(u => u.email === currentUser.email);
                         setRole(mockUser ? mockUser.role : "Member");
                         if (mockUser) setUser(prev => ({ ...prev, displayName: mockUser.name }));

@@ -52,6 +52,8 @@ app.add_middleware(
 async def get_current_user(res: HTTPAuthorizationCredentials = Depends(security)):
     try:
         decoded_token = auth.verify_id_token(res.credentials)
+        # Add role from custom claims to the user object
+        decoded_token['role'] = decoded_token.get('role', 'Member')
         return decoded_token
     except Exception as e:
         raise HTTPException(
@@ -171,8 +173,7 @@ async def approve_request(request_id: str, user: dict = Depends(get_current_user
 
 @app.post("/api/projects/{project_id}/assign")
 async def assign_members(project_id: str, assignment: ProjectAssignment, user: dict = Depends(get_current_user)):
-    user_doc = db.collection('users').document(user['uid']).get()
-    if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
+    if user.get('role') != 'CEO':
         raise HTTPException(status_code=403, detail="CEO access required")
     
     proj_ref = db.collection('projects').document(project_id)
@@ -200,9 +201,7 @@ async def submit_report(report: DailyReport, user: dict = Depends(get_current_us
     proj_data = proj_doc.to_dict()
     assigned = proj_data.get('assignedMembers', [])
     
-    user_role_doc = db.collection('users').document(user['uid']).get()
-    user_role = user_role_doc.to_dict().get('role') if user_role_doc.exists else "Client"
-
+    user_role = user.get('role', 'Client')
     if user_role != 'CEO' and user_email not in assigned:
         raise HTTPException(status_code=403, detail="Access denied: You are not assigned to this project")
 
@@ -222,8 +221,7 @@ async def submit_report(report: DailyReport, user: dict = Depends(get_current_us
 @app.get("/api/projects")
 async def get_projects(user: dict = Depends(get_current_user)):
     user_email = user.get('email')
-    user_role_doc = db.collection('users').document(user['uid']).get()
-    user_role = user_role_doc.to_dict().get('role') if user_role_doc.exists else "Client"
+    user_role = user.get('role', 'Client')
 
     if user_role == 'CEO':
         docs = db.collection('projects').stream()
@@ -239,8 +237,7 @@ async def get_projects(user: dict = Depends(get_current_user)):
 @app.post("/api/projects")
 async def create_project_api(project: ProjectSchema, user: dict = Depends(get_current_user)):
     print(f"DEBUG: Project creation attempt by {user.get('email')}")
-    user_doc = db.collection('users').document(user['uid']).get()
-    if not user_doc.exists or user_doc.to_dict().get('role') != 'CEO':
+    if user.get('role') != 'CEO':
         raise HTTPException(status_code=403, detail="CEO access required")
     
     project_data = project.dict()

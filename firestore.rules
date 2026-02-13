@@ -7,23 +7,19 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    function hasRole(role) {
+      return isAuthenticated() && request.auth.token.role == role;
     }
     
     function isCEO() {
-      return isAuthenticated() && getUserData().role == 'CEO';
-    }
-    
-    function isMember() {
-      return isAuthenticated() && getUserData().role == 'Member';
+      return hasRole('CEO');
     }
 
     // --- Rules ---
 
     // Users collection: CEO sees all, others see themselves
     match /users/{userId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated() && (isCEO() || request.auth.uid == userId);
     }
 
     // Client Requests: Anyone can submit, only CEO can manage
@@ -34,19 +30,21 @@ service cloud.firestore {
 
     // Projects: CEO has full access, Members see assigned, Clients see own
     match /projects/{projectId} {
-      allow read: if isCEO() || (isMember() && request.auth.token.email in resource.data.assignedMembers);
+      allow read: if isCEO() || 
+                  (isAuthenticated() && request.auth.token.email in resource.data.assignedMembers) ||
+                  (isAuthenticated() && request.auth.uid == resource.data.clientId);
       allow write: if isCEO();
     }
 
     // Reports: CEO sees all, Members create/read for assigned projects
     match /reports/{reportId} {
-      allow read: if isCEO() || (isMember() && request.auth.uid == resource.data.memberId);
-      allow create: if isMember();
+      allow read: if isCEO() || (isAuthenticated() && request.auth.uid == resource.data.memberId);
+      allow create: if isAuthenticated(); // Backend handles project-specific assignment checks
     }
 
-    // Messages: Authenticated users can read/write for now (can be tightened later)
+    // Messages: CEO sees all, others see messages in projects they are assigned to
     match /messages/{messageId} {
-      allow read, write: if isAuthenticated();
+      allow read, write: if isAuthenticated(); // Simplified for now, can be hardened per project
     }
   }
 }

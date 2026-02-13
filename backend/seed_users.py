@@ -3,31 +3,29 @@ from firebase_admin import credentials, auth, firestore
 
 # Initialize Firebase Admin
 if not firebase_admin._apps:
-    cred = credentials.Certificate("serviceAccountKey.json")
-    firebase_admin.initialize_app(cred)
+    try:
+        cred = credentials.Certificate("backend/serviceAccountKey.json")
+        firebase_admin.initialize_app(cred)
+    except Exception:
+        cred = credentials.Certificate("serviceAccountKey.json")
+        firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-CEO_EMAIL = "abdulkalamro20@gmail.com"
-TEAM_EMAILS = [
-    "akhilnadhdonka@gmail.com",
-    "intidevaonyx@gmail.com",
-    "aggalaaneeshram@gmail.com",
-    "vinayrajchinnam@gmail.com",
-    "syedfidaemohmmed@gmail.com"
-]
+FOUNDERS = {
+    "CEO": "abdulkalamro20@gmail.com",
+    "CTO": "akhilnadhdonka@gmail.com",
+    "Operations": "intidevaonyx@gmail.com",
+    "Admin Head": "aggalaaneeshram@gmail.com",
+    "Marketing": "vinayrajchinnam@gmail.com",
+    "Helper": "syedfidaemohmmed@gmail.com"
+}
 
 def seed_users():
-    print("Starting user seeding...")
-    
-    # 1. Process CEO
-    process_user(CEO_EMAIL, "CEO")
-    
-    # 2. Process Team Members
-    for email in TEAM_EMAILS:
-        process_user(email, "Member")
-
-    print("Seeding complete.")
+    print("Starting user seeding and Custom Claims sync...")
+    for role, email in FOUNDERS.items():
+        process_user(email, role)
+    print("Seeding and role synchronization complete.")
 
 DEFAULT_PASSWORD = "nexlayer@2026"
 
@@ -46,14 +44,19 @@ def process_user(email, role):
             uid = user.uid
             print(f"Created new user {email} in Auth.")
         
+        # 2. Sync to Firestore
         user_ref = db.collection('users').document(uid)
         user_ref.set({
             "email": email,
             "role": role,
             "name": user.display_name,
             "updatedAt": firestore.SERVER_TIMESTAMP
-        })
-        print(f"Set role '{role}' for {email} (UID: {uid}) in Firestore.")
+        }, merge=True)
+        print(f"Set role '{role}' for {email} in Firestore.")
+
+        # 3. Set Custom Claims in Firebase Auth
+        auth.set_custom_user_claims(uid, {'role': role})
+        print(f"Set Custom Claim 'role={role}' for {email} in Firebase Auth.")
     except Exception as e:
         print(f"Error processing {email}: {e}")
 
