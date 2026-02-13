@@ -29,6 +29,7 @@ const Sidebar = ({ role }) => {
         navItems = [
             { name: 'Overview', path: '/dashboard', icon: <LayoutDashboard size={20} />, end: true },
             { name: 'Projects', path: '/dashboard/projects', icon: <FolderKanban size={20} /> },
+            { name: 'Member Tasks', path: '/dashboard/tasks', icon: <CheckSquare size={20} /> },
             { name: 'Reports', path: '/dashboard/reports', icon: <FileText size={20} /> },
             { name: 'Team', path: '/dashboard/team', icon: <Users size={20} /> },
             { name: 'Project Request', path: '/dashboard/request', icon: <FolderOpen size={20} /> },

@@ -30,17 +30,18 @@ const DashboardLayout = () => {
                             const userData = userDoc.data();
                             console.log("User Role Found in Firestore:", userData.role);
                             setRole(userData.role);
+                            if (userData.displayName) setUser(prev => ({ ...prev, displayName: userData.displayName }));
                         } else {
                             console.warn("No user document found for UID:", currentUser.uid);
-                            // Fallback to MOCK_USERS if doc missing
                             const mockUser = MOCK_USERS.find(u => u.email === currentUser.email);
                             setRole(mockUser ? mockUser.role : "Member");
+                            if (mockUser) setUser(prev => ({ ...prev, displayName: mockUser.name }));
                         }
                     } catch (error) {
                         console.error("Error fetching role for UID", currentUser.uid, ":", error);
-                        // Fallback to MOCK_USERS if permission denied or other error
                         const mockUser = MOCK_USERS.find(u => u.email === currentUser.email);
                         setRole(mockUser ? mockUser.role : "Member");
+                        if (mockUser) setUser(prev => ({ ...prev, displayName: mockUser.name }));
                     }
                 } else {
                     navigate('/login');

@@ -8,29 +8,29 @@ export const MOCK_USERS = [
         avatar: "/team/abdul.png"
     },
     {
-        name: "D Akhil",
+        name: "Akhil",
         email: "akhilnadhdonka@gmail.com",
-        role: "Member",
+        role: "CTO",
     },
     {
-        name: "ID Onyx",
+        name: "Deva",
         email: "intidevaonyx@gmail.com",
-        role: "Member",
+        role: "Operations",
     },
     {
-        name: "A Aneesh Ram",
+        name: "Aneesh Ram",
         email: "aggalaaneeshram@gmail.com",
-        role: "Member",
+        role: "Admin Head",
     },
     {
-        name: "Ch. Vinay",
+        name: "Vinay",
         email: "vinayrajchinnam@gmail.com",
-        role: "Member",
+        role: "Marketing",
     },
     {
-        name: "Syed Fida E Mohmmed",
+        name: "Syed Fida",
         email: "syedfidaemohmmed@gmail.com",
-        role: "Member",
+        role: "Helper",
     },
     {
         name: "Mock Client",
