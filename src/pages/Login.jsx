@@ -1,28 +1,26 @@
-import React, { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, RefreshCw } from 'lucide-react';
 import { MOCK_USERS, DEV_PASSWORD } from '../config/authConfig';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [resendStatus, setResendStatus] = useState('');
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
         e.preventDefault();
-
-        // Clear any old mock data
-        localStorage.removeItem('dev-mock-auth');
+        setError('');
+        setResendStatus('');
 
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Strict Email Verification Check
             if (!user.emailVerified) {
                 setError('Please verify your email address to access the dashboard.');
                 return;
@@ -32,6 +30,20 @@ const Login = () => {
         } catch (err) {
             setError('Invalid credentials. Please try again.');
             console.error(err);
+        }
+    };
+
+    const handleResendVerification = async () => {
+        if (!auth.currentUser) {
+            setError('Please try logging in first to resend verification.');
+            return;
+        }
+
+        try {
+            await sendEmailVerification(auth.currentUser);
+            setResendStatus('Verification email sent! Please check your inbox.');
+        } catch (err) {
+            setError('Error sending verification email: ' + err.message);
         }
     };
 
@@ -51,7 +63,25 @@ const Login = () => {
                     <p className="text-gray-600 dark:text-gray-400">Access the internal dashboard.</p>
                 </div>
 
-                {error && <p className="text-red-500 text-sm text-center mb-4 bg-red-500/10 py-2 rounded border border-red-500/20">{error}</p>}
+                {error && (
+                    <div className="text-center mb-4 space-y-2">
+                        <p className="text-red-500 text-sm bg-red-500/10 py-2 rounded border border-red-500/20">{error}</p>
+                        {error.includes('verify your email') && (
+                            <button
+                                onClick={handleResendVerification}
+                                className="text-nex-purple text-xs flex items-center gap-1 mx-auto hover:underline"
+                            >
+                                <RefreshCw className="w-3 h-3" /> Resend Verification Email
+                            </button>
+                        )}
+                    </div>
+                )}
+
+                {resendStatus && (
+                    <p className="text-green-500 text-sm text-center mb-4 bg-green-500/10 py-2 rounded border border-green-500/20">
+                        {resendStatus}
+                    </p>
+                )}
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
