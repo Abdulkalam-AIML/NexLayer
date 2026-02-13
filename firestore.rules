@@ -15,11 +15,15 @@ service cloud.firestore {
       return hasRole('CEO');
     }
 
+    function isSecureUser() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
     // --- Rules ---
 
-    // Users collection: CEO sees all, others see themselves
+    // Users collection: CEO sees all, others see themselves (Must be verified)
     match /users/{userId} {
-      allow read, write: if isAuthenticated() && (isCEO() || request.auth.uid == userId);
+      allow read, write: if isSecureUser() && (isCEO() || request.auth.uid == userId);
     }
 
     // Client Requests: Anyone can submit, only CEO can manage
@@ -31,21 +35,21 @@ service cloud.firestore {
     // Projects: CEO has full access, Members see ONLY assigned, Clients see ONLY own
     match /projects/{projectId} {
       allow read: if isCEO() || 
-                  (isAuthenticated() && request.auth.token.email in resource.data.assignedMembers) ||
-                  (isAuthenticated() && request.auth.uid == resource.data.clientId);
+                  (isSecureUser() && request.auth.token.email in resource.data.assignedMembers) ||
+                  (isSecureUser() && request.auth.uid == resource.data.clientId);
       allow write: if isCEO();
     }
 
     // Reports: Must be assigned to the project to create a report
     match /reports/{reportId} {
-      allow read: if isCEO() || (isAuthenticated() && request.auth.uid == data().memberId);
-      allow create: if isAuthenticated() && 
+      allow read: if isCEO() || (isSecureUser() && request.auth.uid == data().memberId);
+      allow create: if isSecureUser() && 
                     get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.assignedMembers.hasAny([request.auth.token.email]);
     }
 
     // Messages: Strict project-level isolation
     match /messages/{messageId} {
-      allow read, write: if isAuthenticated() && (
+      allow read, write: if isSecureUser() && (
         isCEO() || 
         get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.assignedMembers.hasAny([request.auth.token.email]) ||
         get(/databases/$(database)/documents/projects/$(request.resource.data.projectId)).data.clientId == request.auth.uid

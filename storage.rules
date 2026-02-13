@@ -1,0 +1,34 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isSecureUser() {
+      return isAuthenticated() && request.auth.token.email_verified == true;
+    }
+
+    function isCEO() {
+      return isAuthenticated() && request.auth.token.role == "CEO";
+    }
+
+    // User certificates/files: Owner or CEO
+    match /certificates/{userId}/{fileName} {
+      allow read, write: if isSecureUser() && (request.auth.uid == userId || isCEO());
+    }
+
+    // Project assets: Assigned members or CEO
+    match /projects/{projectId}/{allPaths=**} {
+      // This would require a firestore.get check if we store project data in Firestore
+      // For now, only CEO can manage project root assets or specific logic if needed
+      allow read, write: if isCEO();
+    }
+
+    // Block everything else by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
