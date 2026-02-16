@@ -22,11 +22,7 @@ const Login = () => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            if (!user.emailVerified) {
-                setError('Please verify your email address to access the dashboard.');
-                return;
-            }
-
+            // Allow login for team members (email verification not enforced for internal users)
             navigate('/dashboard');
         } catch (err) {
             setError('Invalid credentials. Please try again.');
