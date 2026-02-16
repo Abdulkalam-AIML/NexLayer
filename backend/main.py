@@ -62,6 +62,8 @@ security = HTTPBearer()
 # Production Security Configuration
 TRUSTED_ORIGINS = [
     "https://nex-layer.vercel.app",
+    "https://nexlayerweb.in",
+    "https://www.nexlayerweb.in",
     "http://localhost:5173",  # For local development
     "http://127.0.0.1:5173"
 ]
