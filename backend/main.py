@@ -34,14 +34,27 @@ if not firebase_admin._apps:
     else:
         # Use service account json if available locally
         try:
-            cred = credentials.Certificate("serviceAccountKey.json")
+            # Construct absolute path to serviceAccountKey.json
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            cred_path = os.path.join(base_path, "serviceAccountKey.json")
+            cred = credentials.Certificate(cred_path)
             firebase_admin.initialize_app(cred)
-        except Exception:
+            print(f"Successfully initialized Firebase with credentials from {cred_path}")
+        except Exception as e:
+            print(f"Failed to load serviceAccountKey.json: {e}")
             # Fallback for production environments with env vars or ADC
             firebase_admin.initialize_app()
 
+# Initialize Firebase Admin
+# ... (existing code) ...
+
 db = firestore.client()
 app = FastAPI(title="NexLayer Operations System API")
+
+# Rate Limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Security
 security = HTTPBearer()

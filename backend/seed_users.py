@@ -2,13 +2,27 @@ import firebase_admin
 from firebase_admin import credentials, auth, firestore
 
 # Initialize Firebase Admin
+import os
+# ... imports
+
+# Initialize Firebase Admin
 if not firebase_admin._apps:
     try:
-        cred = credentials.Certificate("backend/serviceAccountKey.json")
+        # Construct absolute path to serviceAccountKey.json
+        base_path = os.path.dirname(os.path.abspath(__file__))
+        cred_path = os.path.join(base_path, "serviceAccountKey.json")
+        cred = credentials.Certificate(cred_path)
         firebase_admin.initialize_app(cred)
-    except Exception:
-        cred = credentials.Certificate("serviceAccountKey.json")
-        firebase_admin.initialize_app(cred)
+        print(f"Initialized with credentials from {cred_path}")
+    except Exception as e:
+        print(f"Failed to load credentials: {e}")
+        try:
+             # Fallback to local if running from backend dir
+            cred = credentials.Certificate("serviceAccountKey.json")
+            firebase_admin.initialize_app(cred)
+        except Exception:
+            print("Trying default credentials...")
+            firebase_admin.initialize_app()
 
 db = firestore.client()
 

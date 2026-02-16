@@ -21,6 +21,10 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize App Check with reCAPTCHA v3
 // Note: In development, you can use the debug provider: https://firebase.google.com/docs/app-check/web/debug-provider
+if (import.meta.env.DEV) {
+    self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+}
+
 const appCheck = initializeAppCheck(app, {
     provider: new ReCaptchaV3Provider('6Lfm-MoqAAAAAKn990v2uG_8lE2S6NXZVsh2K-4n'), // This is a public site key
     isTokenAutoRefreshEnabled: true
