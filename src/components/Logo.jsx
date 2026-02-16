@@ -16,7 +16,7 @@ const Logo = ({ size = 48, className = "", showText = false, textColor = "text-b
             </div>
             {showText && (
                 <span className={`text-2xl font-bold tracking-tight whitespace-nowrap ${textColor}`}>
-                    Nex<span className="text-purple-500">Layer</span>
+                    Nex<span className="text-purple-500">Layer</span> Web
                 </span>
             )}
         </div>

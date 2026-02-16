@@ -78,14 +78,14 @@ const DashboardLayout = () => {
     return (
         <div className="min-h-screen bg-white dark:bg-nex-black flex transition-colors duration-300">
             <Helmet>
-                <title>Dashboard | NexLayer</title>
+                <title>Dashboard | NexLayer Web</title>
             </Helmet>
 
             {/* Mobile Header */}
             <div className="md:hidden fixed top-0 w-full bg-white/80 dark:bg-nex-dark/80 backdrop-blur-md border-b border-black/10 dark:border-white/10 z-50 p-4 flex justify-between items-center transition-colors">
                 <div className="flex items-center gap-2">
                     <Logo size={32} />
-                    <h2 className="text-xl font-bold text-black dark:text-white uppercase tracking-tighter">Nex<span className="text-purple-500">Layer</span></h2>
+                    <h2 className="text-xl font-bold text-black dark:text-white uppercase tracking-tighter">Nex<span className="text-purple-500">Layer</span> Web</h2>
                 </div>
                 <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-black dark:text-white p-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-full transition-colors">
                     <Menu />

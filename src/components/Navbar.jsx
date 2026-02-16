@@ -32,7 +32,7 @@ const Navbar = () => {
                 <a href="#" className="flex items-center gap-2 group">
                     <Logo size={40} className="group-hover:scale-110 transition-transform" />
                     <span className="text-xl font-bold text-black dark:text-white tracking-widest uppercase">
-                        Nex<span className="text-purple-500">Layer</span>
+                        Nex<span className="text-purple-500">Layer</span> Web
                     </span>
                 </a>
 

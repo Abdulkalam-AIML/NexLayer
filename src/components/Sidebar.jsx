@@ -59,7 +59,7 @@ const Sidebar = ({ role }) => {
             <div className="p-6 border-b border-black/10 dark:border-white/10 flex flex-col items-center">
                 <Logo size={64} className="mb-2" />
                 <h2 className="text-xl font-bold text-black dark:text-white tracking-widest uppercase">
-                    Nex<span className="text-purple-500">Layer</span>
+                    Nex<span className="text-purple-500">Layer</span> Web
                 </h2>
                 <p className="text-[10px] text-gray-500 uppercase tracking-[0.2em] mt-1">Team Portal</p>
             </div>
