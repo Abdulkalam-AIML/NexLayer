@@ -139,11 +139,34 @@ async def add_security_headers(request, call_next):
     response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     return response
 
+# Admin email(s) for fallback role assignment
+ADMIN_EMAILS = ["abdulkalamro20@gmail.com"]
+
 async def get_current_user(res: HTTPAuthorizationCredentials = Depends(security)):
     try:
         decoded_token = auth.verify_id_token(res.credentials)
-        # Add role from custom claims to the user object
-        decoded_token['role'] = decoded_token.get('role', 'Member')
+        
+        # 1. Check JWT custom claims first
+        role = decoded_token.get('role')
+        
+        # 2. If no role in JWT, check Firestore users collection
+        if not role:
+            try:
+                user_doc = db.collection('users').document(decoded_token['uid']).get()
+                if user_doc.exists:
+                    role = user_doc.to_dict().get('role')
+            except Exception:
+                pass
+        
+        # 3. Fallback: check admin email list
+        if not role:
+            email = decoded_token.get('email', '')
+            if email in ADMIN_EMAILS:
+                role = 'CEO'
+            else:
+                role = 'Member'
+        
+        decoded_token['role'] = role
         return decoded_token
     except Exception as e:
         raise HTTPException(
