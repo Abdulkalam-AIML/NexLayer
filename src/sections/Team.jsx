@@ -74,7 +74,7 @@ const Team = () => {
                     <h2 className="text-3xl md:text-5xl font-bold mb-4 dark:text-white">
                         Core <span className="text-nex-purple neon-text">Team</span>
                     </h2>
-                    <p className="text-gray-500 dark:text-gray-400">The minds behind NexLayer.</p>
+                    <p className="text-gray-500 dark:text-gray-400">The minds behind NexLayer Web.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

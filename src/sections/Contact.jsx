@@ -41,7 +41,7 @@ const Contact = ({ prefilledService }) => {
 
             // 2. Secondary WhatsApp Redirection
             const phoneNumber = "919392995620";
-            const message = `Hello NexLayer! 🚀\n\nI'm *${formData.name}*.\n\n*Project:* ${formData.projectType}\n*Deadline:* ${formData.deadline}\n*Email:* ${formData.email}\n*Phone:* ${formData.phone}\n\n*Details:* ${formData.message}`;
+            const message = `Hello NexLayer Web! 🚀\n\nI'm *${formData.name}*.\n\n*Project:* ${formData.projectType}\n*Deadline:* ${formData.deadline}\n*Email:* ${formData.email}\n*Phone:* ${formData.phone}\n\n*Details:* ${formData.message}`;
             const encodedMessage = encodeURIComponent(message);
             const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
             window.open(whatsappUrl, '_blank');
@@ -67,7 +67,7 @@ const Contact = ({ prefilledService }) => {
 
             <div className="container mx-auto px-4">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-5xl font-bold mb-4 dark:text-white">Contact <span className="text-nex-purple neon-text">NexLayer</span></h2>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-4 dark:text-white">Contact <span className="text-nex-purple neon-text">NexLayer Web</span></h2>
                     <p className="text-gray-500 dark:text-gray-400">Let's build something extraordinary together.</p>
                 </div>
 
@@ -219,7 +219,7 @@ const Contact = ({ prefilledService }) => {
                 </div>
 
                 <div className="text-gray-500 dark:text-gray-400 text-sm text-center">
-                    <p>&copy; {new Date().getFullYear()} NexLayer. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} NexLayer Web. All rights reserved.</p>
                     <p>Student Minds. Professional Tech Solutions.</p>
                 </div>
             </div>

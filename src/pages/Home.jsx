@@ -23,9 +23,9 @@ const Home = () => {
     return (
         <div className="min-h-screen relative overflow-hidden bg-transparent transition-colors duration-300">
             <Helmet>
-                <title>NexLayer | Student Minds. Professional Tech Solutions.</title>
-                <meta name="description" content="NexLayer is a student-led tech team providing AI mini projects, website development, web applications, and technical project guidance with full documentation support." />
-                <meta name="keywords" content="NexLayer, student project support, AI mini projects, website development team, student tech startup, ML project help, web application development" />
+                <title>NexLayer Web | Student Minds. Professional Tech Solutions.</title>
+                <meta name="description" content="NexLayer Web is a student-led tech team providing AI mini projects, website development, web applications, and technical project guidance with full documentation support." />
+                <meta name="keywords" content="NexLayer Web, NexLayer, student project support, AI mini projects, website development team, student tech startup, ML project help, web application development" />
             </Helmet>
 
             <main className="relative z-10">

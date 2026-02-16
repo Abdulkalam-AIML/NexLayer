@@ -50,7 +50,7 @@ const Login = () => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-white dark:bg-nex-black relative overflow-hidden transition-colors duration-300">
             <Helmet>
-                <title>Team Login | NexLayer</title>
+                <title>Team Login | NexLayer Web</title>
             </Helmet>
 
             {/* Background elements */}

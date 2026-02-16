@@ -30,7 +30,7 @@ const About = () => {
                         transition={{ duration: 0.6 }}
                         className="text-3xl md:text-5xl font-bold mb-6 dark:text-white"
                     >
-                        About <span className="text-nex-purple neon-text">NexLayer</span>
+                        About <span className="text-nex-purple neon-text">NexLayer Web</span>
                     </motion.h2>
 
                     <motion.div
@@ -40,7 +40,7 @@ const About = () => {
                         className="space-y-6 text-gray-600 dark:text-gray-300 text-lg"
                     >
                         <p>
-                            NexLayer is a structured technical team built by students to support students and startups.
+                            NexLayer Web is a structured technical team built by students to support students and startups.
                             We specialize in modern website development, AI/ML mini-projects, and web applications.
                         </p>
                         <p className="border-l-4 border-nex-purple pl-4 italic text-black dark:text-white/90">
