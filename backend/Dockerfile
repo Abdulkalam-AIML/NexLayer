@@ -7,4 +7,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Use shell form so $PORT env var is expanded at runtime (Render provides PORT)
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}
